@@ -2,7 +2,7 @@
   "profiles": {
     "confluence.cli": {
       "commandName": "Project",
-      "commandLineArgs": "--list"
+      "commandLineArgs": "spaces --list"
     }
   }
 }

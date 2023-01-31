@@ -9,6 +9,9 @@ using System.ComponentModel;
 using System.Threading.Tasks;
 using Spectre.IO;
 using confluence.api;
+using System.Data;
+using Spectre.Console.Extensions.Table;
+using confluence.api.Models;
 
 namespace confluence.cli.Commands
 {
@@ -35,8 +38,18 @@ namespace confluence.cli.Commands
         public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
         {
             // Ask client for spaces
+            var spaces = await this.confluenceClient.GetAllGlobalActiveSpaces();
 
             // format 
+
+            var dataset = new DataSet("Spaces");
+            var datatable = DataExtensions.CreateDataTable<Space>();
+            datatable.TableName = "Spaces";
+            DataExtensions.FillDataTable(datatable, spaces);
+            dataset.Tables.Add(datatable);
+            var dataSetToDisplay = dataset.FromDataSet(opt => opt.BorderColor(Color.Aqua));
+            console.Write(dataSetToDisplay);
+
 
             // output to console
             return 0;
