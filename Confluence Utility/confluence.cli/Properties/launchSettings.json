@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "confluence.cli": {
+      "commandName": "Project",
+      "commandLineArgs": "--list"
+    }
+  }
+}
