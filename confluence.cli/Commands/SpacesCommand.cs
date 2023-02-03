@@ -22,11 +22,9 @@ namespace confluence.cli.Commands
 
         public sealed class Settings : CommandSettings
         {
-            [CommandOption("-l|--list")]
-            [Description("Lists all global spaces")]
-            public bool List { get; set; }
-
-            // TODO Add CSV output options
+            [CommandOption("-c|--csv")]
+            [Description("Print output as CSV")]
+            public bool CSV { get; set; }
         }
 
         public SpacesCommand(IAnsiConsole console, IConfluenceClient confluenceClient)
@@ -37,21 +35,39 @@ namespace confluence.cli.Commands
 
         public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
         {
-            // Ask client for spaces
-            var spaces = await this.confluenceClient.GetAllGlobalActiveSpaces();
+            try
+            {
+                var spaces = await this.confluenceClient.GetAllGlobalActiveSpaces();
 
-            // format 
+                if (settings.CSV)
+                {
+                    console.WriteLine($"{nameof(Space.key)},{nameof(Space.key)},{nameof(Space.key)},{nameof(Space.key)},Link");
+                    foreach (var space in spaces.OrderBy(x => x.name))
+                    {
+                        console.WriteLine($"{space.key},{space.name},{space.status},{space.type},{space._links.self}");
+                    }
+                }
+                else
+                {
+                    var consoleTable = new Table();
+                    consoleTable.AddColumn(new TableColumn(nameof(Space.key)));
+                    consoleTable.AddColumn(new TableColumn(nameof(Space.name)));
+                    consoleTable.AddColumn(new TableColumn(nameof(Space.status)));
+                    consoleTable.AddColumn(new TableColumn(nameof(Space.type)));
+                    consoleTable.AddColumn(new TableColumn("Link"));
 
-            var dataset = new DataSet("Spaces");
-            var datatable = DataExtensions.CreateDataTable<Space>();
-            datatable.TableName = "Spaces";
-            DataExtensions.FillDataTable(datatable, spaces);
-            dataset.Tables.Add(datatable);
-            var dataSetToDisplay = dataset.FromDataSet(opt => opt.BorderColor(Color.Aqua));
-            console.Write(dataSetToDisplay);
+                    foreach (var space in spaces.OrderBy(x => x.name))
+                    {
+                        consoleTable.AddRow(space.key, space.name, space.status, space.type, $"[link]{space._links.self}[/]");
+                    }
+                    console.Write(consoleTable);
+                }
+            }
+            catch(Exception ex)
+            {
+                console.WriteException(ex);
+            }
 
-
-            // output to console
             return 0;
         }
     }

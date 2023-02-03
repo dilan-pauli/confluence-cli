@@ -40,6 +40,4 @@ namespace confluence.api.Models
         public int size { get; set; }
         public int start { get; set; }
     }
-
-
 }
