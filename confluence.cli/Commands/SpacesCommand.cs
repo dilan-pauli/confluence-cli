@@ -11,9 +11,9 @@ using Spectre.IO;
 using confluence.api;
 using System.Data;
 using Spectre.Console.Extensions.Table;
-using confluence.api.Models;
+using Confluence.Api.Models;
 
-namespace confluence.cli.Commands
+namespace Confluence.Cli.Commands
 {
     public sealed class SpacesCommand : AsyncCommand<SpacesCommand.Settings>
     {

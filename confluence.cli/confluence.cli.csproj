@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <UserSecretsId>98d7e449-e230-4a0c-8ba7-c3cfbe129769</UserSecretsId>
+    <AssemblyName>conflutil</AssemblyName>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -26,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\confluence.api\confluence.api.csproj" />
+    <ProjectReference Include="..\confluence.api\Confluence.Api.csproj" />
   </ItemGroup>
 
 </Project>

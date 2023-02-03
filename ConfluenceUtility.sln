@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.32901.82
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "confluence.cli", "confluence.cli\confluence.cli.csproj", "{F16BA508-0AE2-4744-A001-72A8C4E5211E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Confluence.Cli", "confluence.cli\Confluence.Cli.csproj", "{F16BA508-0AE2-4744-A001-72A8C4E5211E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "confluence.api", "confluence.api\confluence.api.csproj", "{E0F8C1C4-BD67-4C90-B304-A45B88DA098B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Confluence.Api", "confluence.api\Confluence.Api.csproj", "{E0F8C1C4-BD67-4C90-B304-A45B88DA098B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

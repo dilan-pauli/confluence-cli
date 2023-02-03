@@ -1,4 +1,4 @@
-﻿using confluence.api.Models;
+﻿using Confluence.Api.Models;
 using RestSharp;
 using RestSharp.Authenticators;
 

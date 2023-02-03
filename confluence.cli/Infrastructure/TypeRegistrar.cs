@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
-namespace confluence.cli.Infrastructure
+namespace Confluence.Cli.Infrastructure
 {
     public sealed class TypeRegistrar : ITypeRegistrar
     {

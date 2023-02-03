@@ -1,6 +1,6 @@
 ﻿using confluence.api;
-using confluence.cli.Commands;
-using confluence.cli.Infrastructure;
+using Confluence.Cli.Commands;
+using Confluence.Cli.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console;
 using Spectre.Console.Cli;

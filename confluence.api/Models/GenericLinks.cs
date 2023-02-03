@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace confluence.api.Models
+namespace Confluence.Api.Models
 {
     public class GenericLinks
     {
