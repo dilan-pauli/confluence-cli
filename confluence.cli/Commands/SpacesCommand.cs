@@ -41,7 +41,7 @@ namespace Confluence.Cli.Commands
 
                 if (settings.CSV)
                 {
-                    console.WriteLine($"{nameof(Space.key)},{nameof(Space.key)},{nameof(Space.key)},{nameof(Space.key)},Link");
+                    console.WriteLine($"Key,Name,Status,Type,Link");
                     foreach (var space in spaces.OrderBy(x => x.name))
                     {
                         console.WriteLine($"{space.key},{space.name},{space.status},{space.type},{space._links.self}");
