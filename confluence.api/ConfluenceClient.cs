@@ -1,6 +1,5 @@
 ﻿using Confluence.Api.Models;
-using RestSharp;
-using RestSharp.Authenticators;
+using System.Net.Http.Json;
 
 namespace confluence.api
 {
@@ -11,18 +10,15 @@ namespace confluence.api
 
     public class ConfluenceRestSharpClient : IConfluenceClient
     {
-        private readonly IConfluenceConfiguration config;
-        private RestClient client;
+        private HttpClient client;
 
-        public ConfluenceRestSharpClient(IConfluenceConfiguration config)
+        public ConfluenceRestSharpClient(HttpClient clientFactory)
         {
-            this.config = config;
-            var options = new RestClientOptions($"https://{config.BaseUrl}");
-
-            client = new RestClient(options)
+            if (clientFactory is null)
             {
-                Authenticator = new HttpBasicAuthenticator(this.config.Username, this.config.APIKey)
-            };
+                throw new ArgumentNullException(nameof(clientFactory));
+            }
+            this.client = client;
         }
 
         /// <summary>
@@ -32,11 +28,10 @@ namespace confluence.api
         /// <returns></returns>
         public async Task<List<Space>> GetAllGlobalActiveSpaces()
         {
-            var request = new RestRequest("wiki/rest/api/space", Method.Get);
-            request.AddParameter("type", "global");
-            request.AddParameter("limit", "100");
-            request.AddParameter("status", "current");
-            var result = await client.GetAsync<SpaceArray>(request);
+            var uriBuilder = new UriBuilder("/wiki/rest/api/space");
+            uriBuilder.Query = "type=global&limit=100&status=current";
+            var result = await client.GetFromJsonAsync<SpaceArray>(uriBuilder.Uri);
+
 
             return result?.results ?? throw new InvalidProgramException("Unable to get spaces from service.");
         }

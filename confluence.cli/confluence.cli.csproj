@@ -24,10 +24,18 @@
     <PackageReference Include="Spectre.Console.Extensions.Progress" Version="1.0.0" />
     <PackageReference Include="Spectre.Console.Extensions.Table" Version="1.0.0" />
     <PackageReference Include="Spectre.IO" Version="0.9.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
+    <PackageReference Include="System.Text.Json" Version="7.0.1" />
+    <PackageReference Include="IdentityModel" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\confluence.api\Confluence.Api.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="Microsoft.Extensions.Http" />
+    <None Remove="System.Text.Json" />
+    <None Remove="IdentityModel" />
+  </ItemGroup>
 </Project>
