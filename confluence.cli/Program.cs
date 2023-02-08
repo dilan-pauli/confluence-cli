@@ -1,13 +1,10 @@
 ﻿using confluence.api;
 using Confluence.Cli.Commands;
 using Confluence.Cli.Infrastructure;
+using IdentityModel.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console;
 using Spectre.Console.Cli;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using Microsoft.Extensions.Http;
-using IdentityModel.Client;
 
 // Create a type registrar and register any dependencies.
 // A type registrar is an adapter for a DI framework.
@@ -18,7 +15,7 @@ registrations.AddHttpClient<IConfluenceClient, ConfluenceRestSharpClient>(
         var config = services.GetService<IConfluenceConfiguration>();
         if (config is not null)
         {
-            client.BaseAddress = new Uri(config.BaseUrl);
+            client.BaseAddress = new Uri($"https://{config.BaseUrl}");
             client.SetBasicAuthentication(config.Username, config.APIKey);
         }
     });

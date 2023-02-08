@@ -1,8 +1,12 @@
 {
-  "profiles": {
-    "confluence.cli": {
-      "commandName": "Project",
-      "commandLineArgs": "spaces --list"
+    "profiles": {
+        "confluence.cli.spaces": {
+            "commandName": "Project",
+            "commandLineArgs": "spaces --list"
+        },
+        "confluence.cli.pages": {
+            "commandName": "Project",
+            "commandLineArgs": "pages --sapce LWProduct --csv"
+        }
     }
-  }
 }

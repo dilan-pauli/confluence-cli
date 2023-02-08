@@ -1,5 +1,5 @@
-﻿using Confluence.Api.Models;
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
+using Confluence.Api.Models;
 
 namespace confluence.api
 {
@@ -12,11 +12,11 @@ namespace confluence.api
     {
         private HttpClient client;
 
-        public ConfluenceRestSharpClient(HttpClient clientFactory)
+        public ConfluenceRestSharpClient(HttpClient client)
         {
-            if (clientFactory is null)
+            if (client is null)
             {
-                throw new ArgumentNullException(nameof(clientFactory));
+                throw new ArgumentNullException(nameof(client));
             }
             this.client = client;
         }
@@ -28,13 +28,10 @@ namespace confluence.api
         /// <returns></returns>
         public async Task<List<Space>> GetAllGlobalActiveSpaces()
         {
-            var uriBuilder = new UriBuilder("/wiki/rest/api/space");
-            uriBuilder.Query = "type=global&limit=100&status=current";
-            var result = await client.GetFromJsonAsync<SpaceArray>(uriBuilder.Uri);
-
+            var result = await client.GetFromJsonAsync<SpaceArray>("/wiki/rest/api/space" +
+                "?type=global&limit=100&status=current");
 
             return result?.results ?? throw new InvalidProgramException("Unable to get spaces from service.");
         }
-
     }
 }
