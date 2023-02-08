@@ -10,7 +10,7 @@ using Spectre.Console.Cli;
 // Create a type registrar and register any dependencies.
 // A type registrar is an adapter for a DI framework.
 var registrations = new ServiceCollection();
-registrations.AddHttpClient<IConfluenceClient, ConfluenceRestSharpClient>(
+registrations.AddHttpClient<IConfluenceClient, ConfluenceHttpClient>(
     (services, client) =>
     {
         var config = services.GetService<IConfluenceConfiguration>();
@@ -27,6 +27,7 @@ var app = new CommandApp(registrar);
 app.Configure(config =>
 {
     config.AddCommand<SpacesCommand>("spaces").WithExample(new[] { "spaces", "--list" });
+    config.AddCommand<PagesCommand>("pages").WithExample(new[] { "pages", "--space {spaceKey}" });
     config.SetApplicationName("Confluence CLI");
 });
 if (args.Length == 0)

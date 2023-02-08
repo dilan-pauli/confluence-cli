@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Confluence.Api.Models;
+﻿using System.ComponentModel;
 using confluence.api;
-using Spectre.Console.Cli;
 using Spectre.Console;
+using Spectre.Console.Cli;
 
 namespace Confluence.Cli.Commands
 {
@@ -37,28 +31,33 @@ namespace Confluence.Cli.Commands
         {
             try
             {
-                var spaces = await this.confluenceClient.GetAllGlobalActiveSpaces();
+                var pages = await this.confluenceClient.GetAllPagesForSpace(settings.SpaceKey);
 
                 if (settings.CSV)
                 {
-                    //console.WriteLine($"{nameof(Space.key)},{nameof(Space.key)},{nameof(Space.key)},{nameof(Space.key)},Link");
-                    foreach (var space in spaces.OrderBy(x => x.name))
+                    console.WriteLine($"ID,Title,Type,CreatedDate,LastUpdated,Views,HasContent,Link");
+                    foreach (var page in pages.OrderBy(x => x.version.when))
                     {
-                        //console.WriteLine($"{space.key},{space.name},{space.status},{space.type},{space._links.self}");
+                        var hasContent = page.body.storage.value.Length > 0 ? "TRUE" : "FALSE";
+                        console.WriteLine($"{page.id},{page.title},{page.history.createdDate},{page.version.when},X,{hasContent}, {page._links.self}");
                     }
                 }
                 else
                 {
                     var consoleTable = new Table();
-                    //consoleTable.AddColumn(new TableColumn(nameof(Space.key)));
-                    //consoleTable.AddColumn(new TableColumn(nameof(Space.name)));
-                    //consoleTable.AddColumn(new TableColumn(nameof(Space.status)));
-                    //consoleTable.AddColumn(new TableColumn(nameof(Space.type)));
-                    //consoleTable.AddColumn(new TableColumn("Link"));
+                    consoleTable.AddColumn(new TableColumn("ID"));
+                    consoleTable.AddColumn(new TableColumn("Title"));
+                    consoleTable.AddColumn(new TableColumn("Type"));
+                    consoleTable.AddColumn(new TableColumn("Created Date"));
+                    consoleTable.AddColumn(new TableColumn("Last Updated"));
+                    consoleTable.AddColumn(new TableColumn("Views"));
+                    consoleTable.AddColumn(new TableColumn("HasContent"));
+                    consoleTable.AddColumn(new TableColumn("Link"));
 
-                    foreach (var space in spaces.OrderBy(x => x.name))
+                    foreach (var page in pages.OrderBy(x => x.version.when))
                     {
-                        //consoleTable.AddRow(space.key, space.name, space.status, space.type, $"[link]{space._links.self}[/]");
+                        var hasContent = page.body.storage.value.Length > 0 ? "TRUE" : "FALSE";
+                        consoleTable.AddRow(page.id,page.title, page.type, page.history.createdDate.ToString(), page.version.when.ToString(), "X", hasContent, $"[link]{page._links.self}[/]");
                     }
                     console.Write(consoleTable);
                 }

@@ -6,13 +6,14 @@ namespace confluence.api
     public interface IConfluenceClient
     {
         Task<List<Space>> GetAllGlobalActiveSpaces();
+        Task<List<Content>> GetAllPagesForSpace(string spaceKey);
     }
 
-    public class ConfluenceRestSharpClient : IConfluenceClient
+    public class ConfluenceHttpClient : IConfluenceClient
     {
         private HttpClient client;
 
-        public ConfluenceRestSharpClient(HttpClient client)
+        public ConfluenceHttpClient(HttpClient client)
         {
             if (client is null)
             {
@@ -32,6 +33,19 @@ namespace confluence.api
                 "?type=global&limit=100&status=current");
 
             return result?.results ?? throw new InvalidProgramException("Unable to get spaces from service.");
+        }
+
+        /// <summary>
+        /// Gets all global, current spaces in the instance
+        /// </summary>
+        /// <remarks>TODO: Expand to allow parameter input. Deal with paging better.</remarks>
+        /// <returns></returns>
+        public async Task<List<Content>> GetAllPagesForSpace(string spaceKey)
+        {
+            var result = await client.GetFromJsonAsync<ContentArray>("/wiki/rest/api/content" +
+                $"?spaceKey={spaceKey}&limit=100&expand=body.storage,version,history");
+
+            return result?.results ?? throw new InvalidProgramException("Unable to get pages from service.");
         }
     }
 }
