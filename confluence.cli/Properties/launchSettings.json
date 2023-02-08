@@ -6,7 +6,7 @@
         },
         "confluence.cli.pages": {
             "commandName": "Project",
-            "commandLineArgs": "pages --space LWProduct"
+            "commandLineArgs": "pages --csv --space LWProduct"
         }
     }
 }

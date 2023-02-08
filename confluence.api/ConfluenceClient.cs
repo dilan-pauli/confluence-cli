@@ -6,6 +6,7 @@ namespace confluence.api
     public interface IConfluenceClient
     {
         Task<List<Space>> GetAllGlobalActiveSpaces();
+
         Task<List<Content>> GetAllPagesForSpace(string spaceKey);
     }
 
@@ -42,10 +43,19 @@ namespace confluence.api
         /// <returns></returns>
         public async Task<List<Content>> GetAllPagesForSpace(string spaceKey)
         {
+            var returnResults = new List<Content>();
+
             var result = await client.GetFromJsonAsync<ContentArray>("/wiki/rest/api/content" +
                 $"?spaceKey={spaceKey}&limit=100&expand=body.storage,version,history");
+            returnResults.AddRange(result.results);
 
-            return result?.results ?? throw new InvalidProgramException("Unable to get pages from service.");
+            while (!string.IsNullOrEmpty(result._links.next))
+            {
+                result = await client.GetFromJsonAsync<ContentArray>("/wiki" + result._links.next);
+                returnResults.AddRange(result.results);
+            }
+
+            return returnResults;
         }
     }
 }

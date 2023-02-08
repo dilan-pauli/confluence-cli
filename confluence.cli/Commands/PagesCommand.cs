@@ -31,35 +31,37 @@ namespace Confluence.Cli.Commands
         {
             try
             {
+                // TODO add a specter progress bar while querying
                 var pages = await this.confluenceClient.GetAllPagesForSpace(settings.SpaceKey);
 
-                if (settings.CSV)
+                //if (settings.CSV)
                 {
-                    console.WriteLine($"ID,Title,Type,CreatedDate,LastUpdated,Views,HasContent,Link");
+                    console.WriteLine($"ID,Title,Status,CreatedDate,LastUpdated,Views,HasContent,Link");
                     foreach (var page in pages.OrderBy(x => x.version.when))
                     {
                         var hasContent = page.body.storage.value.Length > 0 ? "TRUE" : "FALSE";
-                        console.WriteLine($"{page.id},{page.title},{page.history.createdDate},{page.version.when},X,{hasContent}, {page._links.self}");
+                        console.WriteLine($"{page.id},{page.title},{page.status},{page.history.createdDate},{page.version.when},X,{hasContent}, {page._links.self}");
                     }
                 }
-                else
+                //else
                 {
-                    var consoleTable = new Table();
-                    consoleTable.AddColumn(new TableColumn("ID"));
-                    consoleTable.AddColumn(new TableColumn("Title"));
-                    consoleTable.AddColumn(new TableColumn("Type"));
-                    consoleTable.AddColumn(new TableColumn("Created Date"));
-                    consoleTable.AddColumn(new TableColumn("Last Updated"));
-                    consoleTable.AddColumn(new TableColumn("Views"));
-                    consoleTable.AddColumn(new TableColumn("HasContent"));
-                    consoleTable.AddColumn(new TableColumn("Link"));
+                    // Currenly too much data for a specter table
+                    //var consoleTable = new Table();
+                    //consoleTable.AddColumn(new TableColumn("ID"));
+                    //consoleTable.AddColumn(new TableColumn("Title"));
+                    //consoleTable.AddColumn(new TableColumn("Status"));
+                    //consoleTable.AddColumn(new TableColumn("Created Date"));
+                    //consoleTable.AddColumn(new TableColumn("Last Updated"));
+                    //consoleTable.AddColumn(new TableColumn("Views"));
+                    //consoleTable.AddColumn(new TableColumn("HasContent"));
+                    //consoleTable.AddColumn(new TableColumn("Link"));
 
-                    foreach (var page in pages.OrderBy(x => x.version.when))
-                    {
-                        var hasContent = page.body.storage.value.Length > 0 ? "TRUE" : "FALSE";
-                        consoleTable.AddRow(page.id,page.title, page.type, page.history.createdDate.ToString(), page.version.when.ToString(), "X", hasContent, $"[link]{page._links.self}[/]");
-                    }
-                    console.Write(consoleTable);
+                    //foreach (var page in pages.OrderBy(x => x.version.when))
+                    //{
+                    //    var hasContent = page.body.storage.value.Length > 0 ? "TRUE" : "FALSE";
+                    //    consoleTable.AddRow(page.id,page.title, page.status, page.history.createdDate.ToString(), page.version.when.ToString(), "X", hasContent, $"[link]{page._links.self}[/]");
+                    //}
+                    //console.Write(consoleTable);
                 }
             }
             catch (Exception ex)
