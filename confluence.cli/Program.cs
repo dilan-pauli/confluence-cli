@@ -1,4 +1,5 @@
 ﻿using confluence.api;
+using Confluence.Cli;
 using Confluence.Cli.Commands;
 using Confluence.Cli.Infrastructure;
 using IdentityModel.Client;
@@ -18,7 +19,7 @@ registrations.AddHttpClient<IConfluenceClient, ConfluenceRestSharpClient>(
             client.BaseAddress = new Uri($"https://{config.BaseUrl}");
             client.SetBasicAuthentication(config.Username, config.APIKey);
         }
-    });
+    }).AddPolicyHandler(Polices.RetryHonouringRetryAfter);
 registrations.AddScoped<IConfluenceConfiguration, EnvConfiguration>();
 var registrar = new TypeRegistrar(registrations);
 
