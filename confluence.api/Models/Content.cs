@@ -37,14 +37,5 @@ namespace Confluence.Api.Models
         //public string representation { get; set; }
         public string value { get; set; }
     }
-
-    public class ContentArray
-    {
-        public GenericLinks _links { get; set; }
-        public int limit { get; set; }
-        public List<Content> results { get; set; }
-        public int size { get; set; }
-        public int start { get; set; }
-    }
 }
 

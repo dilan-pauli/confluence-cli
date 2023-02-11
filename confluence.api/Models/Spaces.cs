@@ -31,13 +31,4 @@ namespace Confluence.Api.Models
         public string status { get; set; }
         public string type { get; set; }
     }
-
-    public class SpaceArray
-    {
-        public GenericLinks _links { get; set; }
-        public int limit { get; set; }
-        public List<Space> results { get; set; }
-        public int size { get; set; }
-        public int start { get; set; }
-    }
 }
