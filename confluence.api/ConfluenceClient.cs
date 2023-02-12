@@ -8,6 +8,10 @@ namespace confluence.api
         Task<List<Space>> GetAllGlobalActiveSpaces();
 
         Task<List<Content>> GetAllPagesForSpace(string spaceKey);
+
+        Task<List<Content>> GetPagesByCQL(string query);
+
+        Task<List<Content>> GetPagesByCQL(string query, Action<int> pageProgress);
     }
 
     public class ConfluenceHttpClient : IConfluenceClient
@@ -36,7 +40,7 @@ namespace confluence.api
             return result?.results ?? throw new InvalidProgramException("Unable to get spaces from service.");
         }
 
-        private async Task<List<T>> FetchWithPagination<T>(string url)
+        private async Task<List<T>> FetchWithPagination<T>(string url, Action<int>? pageProgress = null)
         {
             var returnResults = new List<T>();
 
@@ -51,6 +55,7 @@ namespace confluence.api
 
             while (!string.IsNullOrEmpty(result._links.next))
             {
+                pageProgress?.Invoke(returnResults.Count);
                 result = await client.GetFromJsonAsync<ConfluenceArray<T>>("/wiki" + result._links.next);
 
                 if (result is null)
@@ -83,10 +88,22 @@ namespace confluence.api
         /// <returns></returns>
         public async Task<List<Content>> GetPagesByCQL(string query)
         {
-            var url = "/wiki/rest/api/content/history" +
-                $"?limit=100&expand=body.storage,version,history&cql=\"{query}\"";
+            return await GetPagesByCQL(query, null);
+        }
 
-            return await FetchWithPagination<Content>(url);
+        /// <summary>
+        /// Gets all the pages as content from the server, using the given CQL
+        /// query to flter the results that are returned
+        /// </summary>
+        /// <param name="query"></param>
+        /// <param name="pageProgress">Called on every page returned by the api with the curren result count</param>
+        /// <returns></returns>
+        public async Task<List<Content>> GetPagesByCQL(string query, Action<int>? pageProgress)
+        {
+            var url = "/wiki/rest/api/content/search" +
+                $"?limit=100&expand=body.storage,version,history&cql={query}";
+
+            return await FetchWithPagination<Content>(url, pageProgress);
         }
     }
 }
