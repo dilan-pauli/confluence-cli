@@ -17,6 +17,10 @@ namespace Confluence.Cli.Commands
             [Description("Conflueence Query")]
             public string Query { get; set; }
 
+            [CommandOption("-l|--limit")]
+            [Description("Limit the number of pages returned")]
+            public string LimitCount { get; set; }
+
             [CommandOption("-c|--csv")]
             [Description("Print output as CSV")]
             public bool CSV { get; set; }
@@ -34,15 +38,14 @@ namespace Confluence.Cli.Commands
             try
             {
                 await console.Status()
-                    .AutoRefresh(false)
+                    .AutoRefresh(true)
                     .Spinner(Spinner.Known.Star)
                     .SpinnerStyle(Style.Parse("green bold"))
-                    .StartAsync("Fetching..", async ctx =>
+                    .StartAsync("Fetching...", async ctx =>
                     {
                         pages = await this.confluenceClient.GetPagesByCQL(settings.Query, (pages) =>
                         {
-                            ctx.Refresh();
-                            console.WriteLine($"received {pages} pages...");
+                            ctx.Status($"Fetching {pages} pages...");
                         });
                     });
 
@@ -57,7 +60,6 @@ namespace Confluence.Cli.Commands
                 }
                 else
                 {
-                    // Currenly too much data for a specter table
                     var consoleTable = new Table();
                     consoleTable.AddColumn(new TableColumn("ID"));
                     consoleTable.AddColumn(new TableColumn("Title"));
@@ -80,6 +82,7 @@ namespace Confluence.Cli.Commands
             catch (Exception ex)
             {
                 console.WriteException(ex);
+                console.WriteLine($"double check provided input query: {settings.Query}");
             }
 
             return 0;

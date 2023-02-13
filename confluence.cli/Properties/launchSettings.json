@@ -1,12 +1,12 @@
 {
-    "profiles": {
-        "confluence.cli.spaces": {
-            "commandName": "Project",
-            "commandLineArgs": "spaces --list"
-        },
-        "confluence.cli.pages": {
-            "commandName": "Project",
-            "commandLineArgs": "pages --csv --space LWProduct"
-        }
+  "profiles": {
+    "confluence.cli.spaces": {
+      "commandName": "Project",
+      "commandLineArgs": "spaces --list"
+    },
+    "confluence.cli.pages": {
+      "commandName": "Project",
+      "commandLineArgs": "pages --cql \"lastModified < '2020/01/01' and space = LWProduct\""
     }
+  }
 }
