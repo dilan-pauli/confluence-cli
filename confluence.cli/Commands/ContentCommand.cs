@@ -10,6 +10,7 @@ namespace Confluence.Cli.Commands
     {
         private readonly IAnsiConsole console;
         private readonly IConfluenceClient confluenceClient;
+        private readonly IConfluenceConfiguration config;
 
         public sealed class Settings : CommandSettings
         {
@@ -22,10 +23,11 @@ namespace Confluence.Cli.Commands
             public bool CSV { get; set; }
         }
 
-        public ContentCommand(IAnsiConsole console, IConfluenceClient confluenceClient)
+        public ContentCommand(IAnsiConsole console, IConfluenceClient confluenceClient, IConfluenceConfiguration config)
         {
             this.console = console;
             this.confluenceClient = confluenceClient;
+            this.config = config;
         }
 
         public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
@@ -55,7 +57,7 @@ namespace Confluence.Cli.Commands
                         {
                             hasContent = page.body.storage.value.Length > 100 ? "TRUE" : "FALSE";
                         }
-                        console.WriteLine($"{page.id},{page.title},{page.status},{page.history.createdDate},{page.version.when},{hasContent},{page.type},{page._links.self}");
+                        console.WriteLine($"{page.id},{page.title},{page.status},{page.history.createdDate},{page.version.when},{hasContent},{page.type},{page.GenerateFullWebURL(this.config.BaseUrl)}");
                     }
                 }
                 else
@@ -77,7 +79,7 @@ namespace Confluence.Cli.Commands
                         {
                             hasContent = page.body.storage.value.Length > 100 ? "TRUE" : "FALSE";
                         }
-                        consoleTable.AddRow(page.id, page.title, page.status, page.history.createdDate.ToString(), page.version.when.ToString(), hasContent, page.type, $"[link]{page._links.self}[/]");
+                        consoleTable.AddRow(page.id, page.title, page.status, page.history.createdDate.ToString(), page.version.when.ToString(), hasContent, page.type, $"[link]{page.GenerateFullWebURL(this.config.BaseUrl)}[/]");
                     }
                     console.Write(consoleTable);
                 }

@@ -30,8 +30,8 @@ The columns are the key of the space, the name of the space, the status of teh s
 
 | Key | name | status | type | Link |
 |-|-|-|-|-|
-| Agile | Agile Team | current | global | https://your_domain.atlassian.net/wiki/rest/api/space/Agile 
-| API | API Team | current | global | https://your_domain.atlassian.net/wiki/rest/api/space/AED
+| Agile | Agile Team | current | global | https://your_domain.atlassian.net/wiki/spaces/Agile 
+| API | API Team | current | global | https://your_domain.atlassian.net/wiki/spaces/AED
 
 ...
 

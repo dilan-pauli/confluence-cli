@@ -1,5 +1,4 @@
-﻿using System;
-namespace Confluence.Api.Models
+﻿namespace Confluence.Api.Models
 {
     // Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse);
     public class Body
@@ -12,6 +11,7 @@ namespace Confluence.Api.Models
     {
         //public Expandable _expandable { get; set; }
         public GenericLinks _links { get; set; }
+
         public User createdBy { get; set; }
         public DateTime createdDate { get; set; }
         public bool latest { get; set; }
@@ -21,6 +21,7 @@ namespace Confluence.Api.Models
     {
         //public Expandable _expandable { get; set; }
         public GenericLinks _links { get; set; }
+
         public Body body { get; set; }
         public History history { get; set; }
         public string id { get; set; }
@@ -28,6 +29,11 @@ namespace Confluence.Api.Models
         public string title { get; set; }
         public string type { get; set; }
         public Version version { get; set; }
+
+        public string GenerateFullWebURL(string baseURL)
+        {
+            return $"https://{baseURL}/wiki{this._links.webui}";
+        }
     }
 
     public class Storage
@@ -38,4 +44,3 @@ namespace Confluence.Api.Models
         public string value { get; set; }
     }
 }
-

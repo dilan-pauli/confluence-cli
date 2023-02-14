@@ -19,6 +19,7 @@ namespace Confluence.Cli.Commands
     {
         private readonly IAnsiConsole console;
         private readonly IConfluenceClient confluenceClient;
+        private readonly IConfluenceConfiguration config;
 
         public sealed class Settings : CommandSettings
         {
@@ -27,10 +28,11 @@ namespace Confluence.Cli.Commands
             public bool CSV { get; set; }
         }
 
-        public SpacesCommand(IAnsiConsole console, IConfluenceClient confluenceClient)
+        public SpacesCommand(IAnsiConsole console, IConfluenceClient confluenceClient, IConfluenceConfiguration config)
         {
             this.console = console;
             this.confluenceClient = confluenceClient;
+            this.config = config;
         }
 
         public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
@@ -44,7 +46,7 @@ namespace Confluence.Cli.Commands
                     console.WriteLine($"Key,Name,Status,Type,Link");
                     foreach (var space in spaces.OrderBy(x => x.name))
                     {
-                        console.WriteLine($"{space.key},{space.name},{space.status},{space.type},{space._links.self}");
+                        console.WriteLine($"{space.key},{space.name},{space.status},{space.type},{space.GenerateFullWebURL(this.config.BaseUrl)}");
                     }
                 }
                 else
@@ -58,7 +60,7 @@ namespace Confluence.Cli.Commands
 
                     foreach (var space in spaces.OrderBy(x => x.name))
                     {
-                        consoleTable.AddRow(space.key, space.name, space.status, space.type, $"[link]{space._links.self}[/]");
+                        consoleTable.AddRow(space.key, space.name, space.status, space.type, $"[link]{space.GenerateFullWebURL(this.config.BaseUrl)}[/]");
                     }
                     console.Write(consoleTable);
                 }

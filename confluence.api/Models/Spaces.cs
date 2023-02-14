@@ -30,5 +30,9 @@ namespace Confluence.Api.Models
         public string name { get; set; }
         public string status { get; set; }
         public string type { get; set; }
+        public string GenerateFullWebURL(string baseURL)
+        {
+            return $"https://{baseURL}/wiki{this._links.webui}";
+        }
     }
 }
