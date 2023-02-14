@@ -58,7 +58,9 @@ namespace Confluence.Cli.Commands
                         {
                             hasContent = page.body.storage.value.Length > 100 ? "TRUE" : "FALSE";
                         }
-                        console.WriteLine($"{page.id},{page.title},{page.status},{page.history.createdDate},{page.version.when},{hasContent},{page.type},{page.GenerateFullWebURL(this.config.BaseUrl)}");
+                        var output = $"{page.id},{page.title},{page.status},{page.history.createdDate.ToShortDateString()},{page.version.when.ToShortDateString()},{hasContent},{page.type},{page.GenerateFullWebURL(this.config.BaseUrl)}";
+                        // Specter is adding newlines randomly so we need to write to file.
+                        console.WriteLine(output);
                     }
                 }
                 else
@@ -80,7 +82,7 @@ namespace Confluence.Cli.Commands
                         {
                             hasContent = page.body.storage.value.Length > 100 ? "TRUE" : "FALSE";
                         }
-                        consoleTable.AddRow(page.id, page.title, page.status, page.history.createdDate.ToString(), page.version.when.ToString(), hasContent, page.type, $"[link]{page.GenerateFullWebURL(this.config.BaseUrl)}[/]");
+                        consoleTable.AddRow(page.id, page.title, page.status, page.history.createdDate.ToShortDateString(), page.version.when.ToShortDateString(), hasContent, page.type, $"[link]{page.GenerateFullWebURL(this.config.BaseUrl)}[/]");
                     }
                     console.Write(consoleTable);
                 }
