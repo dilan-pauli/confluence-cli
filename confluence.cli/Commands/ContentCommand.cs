@@ -49,6 +49,7 @@ namespace Confluence.Cli.Commands
 
                 if (settings.CSV)
                 {
+                    // TODO write a file for CSV to prevent the STD output capture of the status text.
                     console.WriteLine($"ID,Title,Status,CreatedDate,LastUpdated,HasContent,Type,Link");
                     foreach (var page in pages.OrderBy(x => x.history.createdDate))
                     {

@@ -37,9 +37,9 @@ The columns are the key of the space, the name of the space, the status of teh s
 
 ### conflutil content
 
-Returns the list of all the pages that match the given CQL query.
+Returns the list of all the content that match the given CQL query.
 
-The first positional argument to this command is the CQL query. IE, `conflutil pages "lastModified < '2020/01/01' and space = API and type = page"` Will get all the pages that have a last modified time of older then 2020 and are in the API space. For more information about how 
+The first positional argument to this command is the CQL query. IE, `conflutil content "lastModified < '2020/01/01' and space = API and type = page"` Will get all the pages that have a last modified time of older then 2020 and are in the API space. For more information about how 
 to use the CQL see this document: https://developer.atlassian.com/cloud/confluence/advanced-searching-using-cql/
 
 This command could take some time to execute if the result list from the query is large. It will display progress while fetching.
