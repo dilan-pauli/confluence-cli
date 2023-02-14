@@ -6,27 +6,23 @@ using Spectre.Console.Cli;
 
 namespace Confluence.Cli.Commands
 {
-    public sealed class PagesCommand : AsyncCommand<PagesCommand.Settings>
+    public sealed class ContentCommand : AsyncCommand<ContentCommand.Settings>
     {
         private readonly IAnsiConsole console;
         private readonly IConfluenceClient confluenceClient;
 
         public sealed class Settings : CommandSettings
         {
-            [CommandOption("-q|--cql")]
-            [Description("Conflueence Query")]
+            [CommandArgument(0, "<CQL>")]
+            [Description("Confluence Query")]
             public string Query { get; set; }
-
-            [CommandOption("-l|--limit")]
-            [Description("Limit the number of pages returned")]
-            public string LimitCount { get; set; }
 
             [CommandOption("-c|--csv")]
             [Description("Print output as CSV")]
             public bool CSV { get; set; }
         }
 
-        public PagesCommand(IAnsiConsole console, IConfluenceClient confluenceClient)
+        public ContentCommand(IAnsiConsole console, IConfluenceClient confluenceClient)
         {
             this.console = console;
             this.confluenceClient = confluenceClient;
@@ -51,11 +47,15 @@ namespace Confluence.Cli.Commands
 
                 if (settings.CSV)
                 {
-                    console.WriteLine($"ID,Title,Status,CreatedDate,LastUpdated,Views,HasContent,Link");
-                    foreach (var page in pages.OrderBy(x => x.version.when))
+                    console.WriteLine($"ID,Title,Status,CreatedDate,LastUpdated,HasContent,Type,Link");
+                    foreach (var page in pages.OrderBy(x => x.history.createdDate))
                     {
-                        var hasContent = page.body.storage.value.Length > 0 ? "TRUE" : "FALSE";
-                        console.WriteLine($"{page.id},{page.title},{page.status},{page.history.createdDate},{page.version.when},X,{hasContent}, {page._links.self}");
+                        string hasContent = "FALSE";
+                        if (page.type != "attachment")
+                        {
+                            hasContent = page.body.storage.value.Length > 100 ? "TRUE" : "FALSE";
+                        }
+                        console.WriteLine($"{page.id},{page.title},{page.status},{page.history.createdDate},{page.version.when},{hasContent},{page.type},{page._links.self}");
                     }
                 }
                 else
@@ -66,14 +66,18 @@ namespace Confluence.Cli.Commands
                     consoleTable.AddColumn(new TableColumn("Status"));
                     consoleTable.AddColumn(new TableColumn("Created Date"));
                     consoleTable.AddColumn(new TableColumn("Last Updated"));
-                    consoleTable.AddColumn(new TableColumn("Views"));
                     consoleTable.AddColumn(new TableColumn("HasContent"));
+                    consoleTable.AddColumn(new TableColumn("Type"));
                     consoleTable.AddColumn(new TableColumn("Link"));
 
-                    foreach (var page in pages.OrderBy(x => x.version.when))
+                    foreach (var page in pages.OrderBy(x => x.history.createdDate))
                     {
-                        var hasContent = page.body.storage.value.Length > 0 ? "TRUE" : "FALSE";
-                        consoleTable.AddRow(page.id, page.title, page.status, page.history.createdDate.ToString(), page.version.when.ToString(), "X", hasContent, $"[link]{page._links.self}[/]");
+                        string hasContent = "FALSE";
+                        if (page.type != "attachment")
+                        {
+                            hasContent = page.body.storage.value.Length > 100 ? "TRUE" : "FALSE";
+                        }
+                        consoleTable.AddRow(page.id, page.title, page.status, page.history.createdDate.ToString(), page.version.when.ToString(), hasContent, page.type, $"[link]{page._links.self}[/]");
                     }
                     console.Write(consoleTable);
                 }
