@@ -22,9 +22,9 @@ To use the command in any terminal session make sure to add conflutil.exe to you
 
 Returns the list of all the global, and current spaces that your account has access too. This will not include any personal spaces. By default the output is shown in a table in the console window.
 
-Use '-c|--csv' to have the tool output the data formated in a comma separated list.
+Use '-c|--csv' to have the tool output the data formated in a comma separated list. The argument for this option is the path to the file that is to be created.
 
-The columns are the key of the space, the name of the space, the status of teh space, the type of the space, and a link to the space.
+The columns are the key of the space, the name of the space, the status of the space, the type of the space, and a link to the space.
 
 #### Example Output
 
@@ -44,7 +44,7 @@ to use the CQL see this document: https://developer.atlassian.com/cloud/confluen
 
 This command could take some time to execute if the result list from the query is large. It will display progress while fetching.
 
-Use '-c|--csv' to have the tool output the data formated in a comma separated list.
+Use '-c|--csv' to have the tool output the data formated in a comma separated list. The argument for this option is the path to the file that is to be created.
 
 The columns are the ID of the content, the title of the content, the status of the content, the created data, the last updated date, if the content has more then 100 char's of content to its body, the type of the content, and a link to the content.
 

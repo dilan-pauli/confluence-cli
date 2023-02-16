@@ -1,6 +1,9 @@
 ﻿using System.ComponentModel;
+using System.Globalization;
 using confluence.api;
 using Confluence.Api.Models;
+using Confluence.Cli.Models;
+using CsvHelper;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -19,8 +22,8 @@ namespace Confluence.Cli.Commands
             public string Query { get; set; }
 
             [CommandOption("-c|--csv")]
-            [Description("Print output as CSV")]
-            public bool CSV { get; set; }
+            [Description("Print output as CSV to the given file location.")]
+            public string? CSV { get; set; }
         }
 
         public ContentCommand(IAnsiConsole console, IConfluenceClient confluenceClient, IConfluenceConfiguration config)
@@ -32,7 +35,7 @@ namespace Confluence.Cli.Commands
 
         public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
         {
-            List<Content> pages = new List<Content>();
+            List<Content> contents = new List<Content>();
             try
             {
                 await console.Status()
@@ -41,26 +44,33 @@ namespace Confluence.Cli.Commands
                     .SpinnerStyle(Style.Parse("green bold"))
                     .StartAsync("Fetching...", async ctx =>
                     {
-                        pages = await this.confluenceClient.GetPagesByCQL(settings.Query, (pages) =>
+                        contents = await this.confluenceClient.GetPagesByCQL(settings.Query, (pages) =>
                         {
                             ctx.Status($"Fetching {pages} pages...");
                         });
                     });
 
-                if (settings.CSV)
+                if (settings.CSV is not null)
                 {
-                    // TODO write a file for CSV to prevent the STD output capture of the status text.
-                    console.WriteLine($"ID,Title,Status,CreatedDate,LastUpdated,HasContent,Type,Link");
-                    foreach (var page in pages.OrderBy(x => x.history.createdDate))
+                    using (var writer = new StreamWriter(settings.CSV))
+                    using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
                     {
-                        string hasContent = "FALSE";
-                        if (page.type != "attachment")
+                        csv.WriteHeader<Page>();
+                        csv.NextRecord();
+                        foreach (var content in contents.OrderBy(x => x.history.createdDate))
                         {
-                            hasContent = page.body.storage.value.Length > 100 ? "TRUE" : "FALSE";
+                            var output = new Page(content.id,
+                                                  content.title,
+                                                  content.status,
+                                                  content.history.createdDate,
+                                                  content.version.when,
+                                                  content.HasContent(),
+                                                  content.type,
+                                                  content.GenerateFullWebURL(this.config.BaseUrl));
+                            csv.WriteRecord(output);
+                            csv.NextRecord();
                         }
-                        var output = $"{page.id},{page.title},{page.status},{page.history.createdDate.ToShortDateString()},{page.version.when.ToShortDateString()},{hasContent},{page.type},{page.GenerateFullWebURL(this.config.BaseUrl)}";
-                        // Specter is adding newlines randomly so we need to write to file.
-                        console.WriteLine(output);
+                        console.WriteLine($"Wrote {contents.Count} results to {settings.CSV}");
                     }
                 }
                 else
@@ -75,18 +85,20 @@ namespace Confluence.Cli.Commands
                     consoleTable.AddColumn(new TableColumn("Type"));
                     consoleTable.AddColumn(new TableColumn("Link"));
 
-                    foreach (var page in pages.OrderBy(x => x.history.createdDate))
+                    foreach (var content in contents.OrderBy(x => x.history.createdDate))
                     {
-                        string hasContent = "FALSE";
-                        if (page.type != "attachment")
-                        {
-                            hasContent = page.body.storage.value.Length > 100 ? "TRUE" : "FALSE";
-                        }
-                        consoleTable.AddRow(page.id, page.title, page.status, page.history.createdDate.ToShortDateString(), page.version.when.ToShortDateString(), hasContent, page.type, $"[link]{page.GenerateFullWebURL(this.config.BaseUrl)}[/]");
+                        consoleTable.AddRow(content.id,
+                                            content.title,
+                                            content.status,
+                                            content.history.createdDate.ToShortDateString(),
+                                            content.version.when.ToShortDateString(),
+                                            content.HasContent().ToString(),
+                                            content.type,
+                                            $"[link]{content.GenerateFullWebURL(this.config.BaseUrl)}[/]");
                     }
                     console.Write(consoleTable);
+                    console.WriteLine($"Fetched {contents.Count} results...");
                 }
-                console.WriteLine($"{pages.Count} results");
             }
             catch (Exception ex)
             {

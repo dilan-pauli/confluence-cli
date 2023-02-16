@@ -6,7 +6,7 @@
     },
     "confluence.cli.content": {
       "commandName": "Project",
-      "commandLineArgs": "content \"lastModified < '2020/01/01' and space = LWProduct and type = page\" --csv"
+      "commandLineArgs": "content \"lastModified < '2020/01/01' and space = LWProduct and type = page\""
     }
   }
 }

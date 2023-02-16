@@ -1,17 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Spectre.Console;
+﻿using Spectre.Console;
 using Spectre.Console.Cli;
 using System.ComponentModel;
-using System.Threading.Tasks;
-using Spectre.IO;
 using confluence.api;
 using System.Data;
-using Spectre.Console.Extensions.Table;
-using Confluence.Api.Models;
+using CsvHelper;
+using System.Globalization;
+using Confluence.Cli.Models;
 
 namespace Confluence.Cli.Commands
 {
@@ -24,8 +18,8 @@ namespace Confluence.Cli.Commands
         public sealed class Settings : CommandSettings
         {
             [CommandOption("-c|--csv")]
-            [Description("Print output as CSV")]
-            public bool CSV { get; set; }
+            [Description("Print output as CSV to the given file location.")]
+            public string? CSV { get; set; }
         }
 
         public SpacesCommand(IAnsiConsole console, IConfluenceClient confluenceClient, IConfluenceConfiguration config)
@@ -41,12 +35,24 @@ namespace Confluence.Cli.Commands
             {
                 var spaces = await this.confluenceClient.GetAllGlobalActiveSpaces();
 
-                if (settings.CSV)
+                if (settings.CSV is not null)
                 {
-                    console.WriteLine($"Key,Name,Status,Type,Link");
-                    foreach (var space in spaces.OrderBy(x => x.name))
+                    using (var writer = new StreamWriter(settings.CSV))
+                    using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
                     {
-                        console.WriteLine($"{space.key},{space.name},{space.status},{space.type},{space.GenerateFullWebURL(this.config.BaseUrl)}");
+                        csv.WriteHeader<Space>();
+                        csv.NextRecord();
+                        foreach (var space in spaces.OrderBy(x => x.name))
+                        {
+                            var output = new Space(space.key,
+                                                   space.name,
+                                                   space.status,
+                                                   space.type,
+                                                   space.GenerateFullWebURL(this.config.BaseUrl));
+                            csv.WriteRecord(output);
+                            csv.NextRecord();
+                        }
+                        console.WriteLine($"Wrote {spaces.Count} spaces to {settings.CSV}");
                     }
                 }
                 else
@@ -63,6 +69,7 @@ namespace Confluence.Cli.Commands
                         consoleTable.AddRow(space.key, space.name, space.status, space.type, $"[link]{space.GenerateFullWebURL(this.config.BaseUrl)}[/]");
                     }
                     console.Write(consoleTable);
+                    console.WriteLine($"Fetched {spaces.Count} spaces...");
                 }
             }
             catch(Exception ex)
