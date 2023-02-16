@@ -51,7 +51,7 @@ The columns are the ID of the content, the title of the content, the status of t
 #### Example Output
 
 | ID | Title | status | Created Date | Last Updated | Has Content | Type | Link
-|-|-|-|-|-|
+|-|-|-|-|-|-|-|-|
 | 134389655 | User Testing Intro | current | 2017-02-20 12:26:03  | 2017-02-23 12:26:03 | TRUE | page | https://your_domain.atlassian.net/wiki/spaces/API/pages/134389655
 | 134389878 | Test Material | current | 2017-02-20 12:26:03  | 2017-02-23 12:26:03 | TRUE | page | https://your_domain.atlassian.net/wiki/spaces/API/pages/134389878
 
