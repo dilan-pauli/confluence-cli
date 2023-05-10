@@ -3,17 +3,6 @@ using Confluence.Api.Models;
 
 namespace confluence.api
 {
-    public interface IConfluenceClient
-    {
-        Task<List<Space>> GetAllGlobalActiveSpaces();
-
-        Task<List<Content>> GetAllPagesForSpace(string spaceKey);
-
-        Task<List<Content>> GetPagesByCQL(string query);
-
-        Task<List<Content>> GetPagesByCQL(string query, Action<int> pageProgress);
-    }
-
     public class ConfluenceHttpClient : IConfluenceClient
     {
         private HttpClient client;
@@ -27,11 +16,6 @@ namespace confluence.api
             this.client = client;
         }
 
-        /// <summary>
-        /// Gets all global, current spaces in the instance
-        /// </summary>
-        /// <remarks>TODO: Expand to allow parameter input. Deal with paging better.</remarks>
-        /// <returns></returns>
         public async Task<List<Space>> GetAllGlobalActiveSpaces()
         {
             var result = await client.GetFromJsonAsync<ConfluenceArray<Space>>("/wiki/rest/api/space" +
@@ -46,7 +30,7 @@ namespace confluence.api
 
             var result = await client.GetFromJsonAsync<ConfluenceArray<T>>(url);
 
-            if(result is null)
+            if (result is null)
             {
                 throw new InvalidOperationException("No results from GET");
             }
@@ -68,11 +52,7 @@ namespace confluence.api
             return returnResults;
         }
 
-        /// <summary>
-        /// Gets all global, current spaces in the instance
-        /// </summary>
-        /// <returns></returns>
-        public async Task<List<Content>> GetAllPagesForSpace(string spaceKey)
+        public async Task<List<Content>> GetAllContentForSpace(string spaceKey)
         {
             var url = "/wiki/rest/api/content" +
                 $"?spaceKey={spaceKey}&limit=100&expand=body.storage,version,history";
@@ -80,30 +60,42 @@ namespace confluence.api
             return await FetchWithPagination<Content>(url);
         }
 
-        /// <summary>
-        /// Gets all the pages as content from the server, using the given CQL
-        /// query to flter the results that are returned
-        /// </summary>
-        /// <param name="query">https://developer.atlassian.com/cloud/confluence/advanced-searching-using-cql/</param>
-        /// <returns></returns>
-        public async Task<List<Content>> GetPagesByCQL(string query)
+        public async Task<List<Content>> GetContentByCQL(string query)
         {
-            return await GetPagesByCQL(query, null);
+            return await GetContentByCQL(query, null);
         }
 
-        /// <summary>
-        /// Gets all the pages as content from the server, using the given CQL
-        /// query to flter the results that are returned
-        /// </summary>
-        /// <param name="query"></param>
-        /// <param name="pageProgress">Called on every page returned by the api with the curren result count</param>
-        /// <returns></returns>
-        public async Task<List<Content>> GetPagesByCQL(string query, Action<int>? pageProgress)
+        public async Task<List<Content>> GetContentByCQL(string query, Action<int>? pageProgress = null)
         {
             var url = "/wiki/rest/api/content/search" +
                 $"?limit=100&expand=body.storage,version,history&cql={query}";
 
             return await FetchWithPagination<Content>(url, pageProgress);
+        }
+
+        public Task<IDictionary<int, Page>> GetCurrentPagesInSpace(int spaceId, Action<int>? pageProgress = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IEnumerable<InlineComment>> GetInlineCommentsOnPage(int pageId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IEnumerable<FooterComment>> GetFooterCommentsOnPage(int pageId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<int> GetViewsOfPage(int pageId, DateTime? fromDate = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<int> GetViewersOfPage(int pageId, DateTime? fromDate = null)
+        {
+            throw new NotImplementedException();
         }
     }
 }

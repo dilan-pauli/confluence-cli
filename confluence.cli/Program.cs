@@ -28,6 +28,7 @@ app.Configure(config =>
 {
     config.AddCommand<SpacesCommand>("spaces").WithExample(new[] { "spaces", "--list" });
     config.AddCommand<ContentCommand>("content").WithExample(new[] { "content", "{cql}" });
+    config.AddCommand<PageAnalyticsCommand>("analytics").WithExample(new[] { "analytics", "{spaceID}" });
     config.SetApplicationName("Confluence CLI");
 });
 if (args.Length == 0)

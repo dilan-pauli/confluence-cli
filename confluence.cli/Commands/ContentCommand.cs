@@ -35,7 +35,7 @@ namespace Confluence.Cli.Commands
 
         public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
         {
-            List<Content> contents = new List<Content>();
+            List<Api.Models.Content> contents = new List<Api.Models.Content>();
             try
             {
                 await console.Status()
@@ -44,7 +44,7 @@ namespace Confluence.Cli.Commands
                     .SpinnerStyle(Style.Parse("green bold"))
                     .StartAsync("Fetching...", async ctx =>
                     {
-                        contents = await this.confluenceClient.GetPagesByCQL(settings.Query, (pages) =>
+                        contents = await this.confluenceClient.GetContentByCQL(settings.Query, (pages) =>
                         {
                             ctx.Status($"Fetching {pages} pages...");
                         });
@@ -55,11 +55,11 @@ namespace Confluence.Cli.Commands
                     using (var writer = new StreamWriter(settings.CSV))
                     using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
                     {
-                        csv.WriteHeader<Page>();
+                        csv.WriteHeader<Models.Content>();
                         csv.NextRecord();
                         foreach (var content in contents.OrderBy(x => x.history.createdDate))
                         {
-                            var output = new Page(content.id,
+                            var output = new Models.Content(content.id,
                                                   content.title,
                                                   content.status,
                                                   content.history.createdDate,
