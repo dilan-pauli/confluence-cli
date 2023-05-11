@@ -9,6 +9,7 @@ using Confluence.Cli.Models;
 
 namespace Confluence.Cli.Commands
 {
+    [Description("Returns all the public spaces in the org")]
     public sealed class SpacesCommand : AsyncCommand<SpacesCommand.Settings>
     {
         private readonly IAnsiConsole console;

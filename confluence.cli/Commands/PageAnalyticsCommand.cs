@@ -10,6 +10,7 @@ using Spectre.Console.Cli;
 
 namespace Confluence.Cli.Commands
 {
+    [Description("Returns all the pages in the given space with the following headers: id, title, parentTitle, createdDate, updatedDate, # of comments, viewers, views. This command could take some time to execute if the result list from the query is large. It will display progress while fetching.")]
     public sealed class PageAnalyticsCommand : AsyncCommand<PageAnalyticsCommand.Settings>
     {
         private readonly IAnsiConsole console;
@@ -18,7 +19,7 @@ namespace Confluence.Cli.Commands
 
         public sealed class Settings : CommandSettings
         {
-            [CommandArgument(0, "<SPACEID>")]
+            [CommandArgument(0, "<SpaceId>")]
             [Description("Space ID")]
             public uint SpaceId { get; set; }
 

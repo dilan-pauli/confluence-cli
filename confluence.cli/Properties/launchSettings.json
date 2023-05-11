@@ -19,6 +19,9 @@
     "analytics csv fromDate": {
       "commandName": "Project",
       "commandLineArgs": "analytics 501055660 -d \"2021-08-01\" --csv \".\\LWProduct.csv\""
+    },
+    "Empty": {
+      "commandName": "Project"
     }
   }
 }
