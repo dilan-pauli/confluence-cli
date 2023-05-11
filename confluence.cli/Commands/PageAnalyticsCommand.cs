@@ -57,17 +57,19 @@ namespace Confluence.Cli.Commands
 
                 if (settings.CSV is not null)
                 {
+                    settings.CSV = settings.CSV.Replace(@"\\", @"\");
                     using (var writer = new StreamWriter(settings.CSV))
                     using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
                     {
+                        var results = new ConcurrentQueue<PageAnalytic>();
                         csv.WriteHeader<PageAnalytic>();
                         csv.NextRecord();
-                        await ReteriveExtraData(contents, (PageAnalytic output) =>
+                        await ReteriveExtraData(contents, results.Enqueue, settings.fromDate);
+                        while(results.TryDequeue(out var output))
                         {
                             csv.WriteRecord(output);
                             csv.NextRecord();
-                        }, settings.fromDate);
-                        console.WriteLine($"Wrote {contents.Count} results to {settings.CSV}");
+                        }
                     }
                 }
                 else
@@ -121,7 +123,7 @@ namespace Confluence.Cli.Commands
                 {
                     var count = 0;
                     var pages = new ConcurrentQueue<PageAnalytic>();
-                    var orderedContents = contents.Values.OrderBy(x => x.createdAt).ToList();
+                    var orderedContents = contents.Values.ToList();
                     ParallelOptions parallelOptions = new()
                     {
                         MaxDegreeOfParallelism = 32
