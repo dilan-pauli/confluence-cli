@@ -52,7 +52,7 @@ namespace Confluence.Cli.Commands
 
                 if (settings.CSV is not null)
                 {
-                    using (var writer = new StreamWriter(settings.CSV))
+                    using (var writer = new StreamWriter(Path.GetFullPath(settings.CSV)))
                     using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
                     {
                         csv.WriteHeader<Models.Content>();

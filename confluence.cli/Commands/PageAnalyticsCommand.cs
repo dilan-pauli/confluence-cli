@@ -57,8 +57,7 @@ namespace Confluence.Cli.Commands
 
                 if (settings.CSV is not null)
                 {
-                    settings.CSV = settings.CSV.Replace(@"\\", @"\");
-                    using (var writer = new StreamWriter(settings.CSV))
+                    using (var writer = new StreamWriter(Path.GetFullPath(settings.CSV)))
                     using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
                     {
                         var results = new ConcurrentQueue<PageAnalytic>();
@@ -70,6 +69,7 @@ namespace Confluence.Cli.Commands
                             csv.WriteRecord(output);
                             csv.NextRecord();
                         }
+                        console.WriteLine($"Wrote {contents.Count} results to ${Path.GetFullPath(settings.CSV)}...");
                     }
                 }
                 else
