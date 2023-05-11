@@ -44,7 +44,8 @@ namespace Confluence.Cli.Commands
                         csv.NextRecord();
                         foreach (var space in spaces.OrderBy(x => x.name))
                         {
-                            var output = new Space(space.key,
+                            var output = new Space(space.id.ToString(),
+                                                   space.key,
                                                    space.name,
                                                    space.status,
                                                    space.type,
@@ -58,6 +59,7 @@ namespace Confluence.Cli.Commands
                 else
                 {
                     var consoleTable = new Table();
+                    consoleTable.AddColumn(new TableColumn(nameof(Space.id)));
                     consoleTable.AddColumn(new TableColumn(nameof(Space.key)));
                     consoleTable.AddColumn(new TableColumn(nameof(Space.name)));
                     consoleTable.AddColumn(new TableColumn(nameof(Space.status)));
@@ -66,7 +68,12 @@ namespace Confluence.Cli.Commands
 
                     foreach (var space in spaces.OrderBy(x => x.name))
                     {
-                        consoleTable.AddRow(space.key, space.name, space.status, space.type, $"[link]{space.GenerateFullWebURL(this.config.BaseUrl)}[/]");
+                        consoleTable.AddRow(space.id.ToString(),
+                                            space.key,
+                                            space.name,
+                                            space.status,
+                                            space.type,
+                                            $"[link]{space.GenerateFullWebURL(this.config.BaseUrl)}[/]");
                     }
                     console.Write(consoleTable);
                     console.WriteLine($"Fetched {spaces.Count} spaces...");
