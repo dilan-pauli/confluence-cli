@@ -11,7 +11,7 @@ namespace confluence.api
         /// </summary>
         /// <param name="spaceId"></param>
         /// <returns>Returns a hash table of the pages to their content for easy parent lookup.</returns>
-        Task<IDictionary<string, Page>> GetCurrentPagesInSpace(int spaceId, Action<int>? pageProgress = null);
+        Task<IDictionary<string, Page>> GetCurrentPagesInSpace(uint spaceId, Action<int>? pageProgress = null);
 
         /// <summary>
         /// Gets all the inline comments on a given page.

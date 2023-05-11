@@ -20,7 +20,7 @@ namespace Confluence.Cli.Commands
         {
             [CommandArgument(0, "<SPACEID>")]
             [Description("Space ID")]
-            public int SpaceId { get; set; }
+            public uint SpaceId { get; set; }
 
             [CommandOption("-d|--fromDate")]
             [Description("Date from which the views are retrieved.")]

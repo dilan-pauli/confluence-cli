@@ -104,7 +104,7 @@ namespace confluence.api
             return await FetchWithPagination<Content>(url, pageProgress);
         }
 
-        public async Task<IDictionary<string, Page>> GetCurrentPagesInSpace(int spaceId, Action<int>? pageProgress = null)
+        public async Task<IDictionary<string, Page>> GetCurrentPagesInSpace(uint spaceId, Action<int>? pageProgress = null)
         {
             var url = $"/wiki/api/v2/spaces/{spaceId}/pages" +
                 $"?status=current&limit={RETURN_LIMIT}&serialize-ids-as-strings=true";
