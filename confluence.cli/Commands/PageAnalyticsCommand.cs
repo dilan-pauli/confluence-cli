@@ -21,6 +21,10 @@ namespace Confluence.Cli.Commands
             [Description("Space ID")]
             public int SpaceId { get; set; }
 
+            [CommandOption("-d|--fromDate")]
+            [Description("Date from which the views are retrieved.")]
+            public DateTime? fromDate { get; set; }
+
             [CommandOption("-c|--csv")]
             [Description("Print output as CSV to the given file location.")]
             public string? CSV { get; set; }
@@ -59,7 +63,7 @@ namespace Confluence.Cli.Commands
                         csv.NextRecord();
                         foreach (var content in contents.OrderBy(x => x.Value.createdAt).ToList())
                         {
-                            PageAnalytic output = await ConvertToAnalytic(content.Value, contents[content.Value.parentId].title);
+                            var output = await ConvertToAnalytic(content.Value, contents[content.Value.parentId].title, settings.fromDate);
                             csv.WriteRecord(output);
                             csv.NextRecord();
                         }
@@ -80,7 +84,7 @@ namespace Confluence.Cli.Commands
 
                     foreach (var content in contents.OrderBy(x => x.Value.createdAt).ToList())
                     {
-                        PageAnalytic output = await ConvertToAnalytic(content.Value, contents[content.Value.parentId].title);
+                        var output = await ConvertToAnalytic(content.Value, contents[content.Value.parentId].title, settings.fromDate);
                         consoleTable.AddRow(output.id.ToString(),
                                                   output.title,
                                                   output.parentTitle,
@@ -102,12 +106,12 @@ namespace Confluence.Cli.Commands
             return 0;
         }
 
-        private async Task<PageAnalytic> ConvertToAnalytic(Page content, string parentTitle)
+        private async Task<PageAnalytic> ConvertToAnalytic(Page content, string parentTitle, DateTime? fromDate = null)
         {
             var inlineComments = await this.confluenceClient.GetInlineCommentsOnPage(content.Id);
             var footerComments = await this.confluenceClient.GetFooterCommentsOnPage(content.Id);
-            var views = await this.confluenceClient.GetViewsOfPage(content.Id);
-            var viewers = await this.confluenceClient.GetViewersOfPage(content.Id);
+            var views = await this.confluenceClient.GetViewsOfPage(content.Id, fromDate);
+            var viewers = await this.confluenceClient.GetViewersOfPage(content.Id, fromDate);
 
             var output = new PageAnalytic(content.Id,
                                   content.title,
