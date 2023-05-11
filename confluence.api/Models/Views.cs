@@ -3,7 +3,7 @@ namespace Confluence.Api.Models
 {
 	public class Views
 	{
-		public string id { get; set; }
+		//public string id { get; set; }
 		public int count { get; set; }
 	}
 }

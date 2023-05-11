@@ -19,7 +19,7 @@ registrations.AddHttpClient<IConfluenceClient, ConfluenceHttpClient>(
             client.BaseAddress = new Uri($"https://{config.BaseUrl}");
             client.SetBasicAuthentication(config.Username, config.APIKey);
         }
-    }).AddPolicyHandler(Polices.RetryHonouringRetryAfter);
+    }).AddPolicyHandler(Polices.RetryHonouringRetryAfter).AddPolicyHandler(Polices.RetryAfterError);
 registrations.AddScoped<IConfluenceConfiguration, EnvConfiguration>();
 var registrar = new TypeRegistrar(registrations);
 
@@ -28,6 +28,7 @@ app.Configure(config =>
 {
     config.AddCommand<SpacesCommand>("spaces").WithExample(new[] { "spaces", "--list" });
     config.AddCommand<ContentCommand>("content").WithExample(new[] { "content", "{cql}" });
+    config.AddCommand<PageAnalyticsCommand>("analytics").WithExample(new[] { "analytics", "{spaceID}" });
     config.SetApplicationName("Confluence CLI");
 });
 if (args.Length == 0)

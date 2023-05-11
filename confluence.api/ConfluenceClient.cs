@@ -1,21 +1,13 @@
-﻿using System.Net.Http.Json;
+﻿using System.Globalization;
+using System.Net.Http.Json;
 using Confluence.Api.Models;
 
 namespace confluence.api
 {
-    public interface IConfluenceClient
-    {
-        Task<List<Space>> GetAllGlobalActiveSpaces();
-
-        Task<List<Content>> GetAllPagesForSpace(string spaceKey);
-
-        Task<List<Content>> GetPagesByCQL(string query);
-
-        Task<List<Content>> GetPagesByCQL(string query, Action<int> pageProgress);
-    }
-
     public class ConfluenceHttpClient : IConfluenceClient
     {
+        public static string RETURN_LIMIT = "250";
+
         private HttpClient client;
 
         public ConfluenceHttpClient(HttpClient client)
@@ -27,15 +19,10 @@ namespace confluence.api
             this.client = client;
         }
 
-        /// <summary>
-        /// Gets all global, current spaces in the instance
-        /// </summary>
-        /// <remarks>TODO: Expand to allow parameter input. Deal with paging better.</remarks>
-        /// <returns></returns>
         public async Task<List<Space>> GetAllGlobalActiveSpaces()
         {
             var result = await client.GetFromJsonAsync<ConfluenceArray<Space>>("/wiki/rest/api/space" +
-                "?type=global&limit=100&status=current");
+                $"?type=global&limit={RETURN_LIMIT}&status=current");
 
             return result?.results ?? throw new InvalidProgramException("Unable to get spaces from service.");
         }
@@ -46,14 +33,14 @@ namespace confluence.api
 
             var result = await client.GetFromJsonAsync<ConfluenceArray<T>>(url);
 
-            if(result is null)
+            if (result is null)
             {
                 throw new InvalidOperationException("No results from GET");
             }
 
             returnResults.AddRange(result.results);
 
-            while (!string.IsNullOrEmpty(result._links.next))
+            while (!string.IsNullOrEmpty(result._links?.next))
             {
                 pageProgress?.Invoke(returnResults.Count);
                 result = await client.GetFromJsonAsync<ConfluenceArray<T>>("/wiki" + result._links.next);
@@ -68,42 +55,105 @@ namespace confluence.api
             return returnResults;
         }
 
-        /// <summary>
-        /// Gets all global, current spaces in the instance
-        /// </summary>
-        /// <returns></returns>
-        public async Task<List<Content>> GetAllPagesForSpace(string spaceKey)
+        private async Task<IDictionary<string, T>> FetchWithPaginationV2<T>(string url, Action<int>? pageProgress = null) where T : ConfluenceResponse
+        {
+            var returnResults = new Dictionary<string, T>();
+
+            var result = await client.GetFromJsonAsync<ConfluenceArray<T>>(url);
+
+            if (result is null)
+            {
+                throw new InvalidOperationException("No results from GET");
+            }
+
+            result.results.ForEach(x => returnResults.Add(x.id, x));
+
+            while (!string.IsNullOrEmpty(result._links?.next))
+            {
+                pageProgress?.Invoke(returnResults.Count);
+                result = await client.GetFromJsonAsync<ConfluenceArray<T>>(result._links.next);
+
+                if (result is null)
+                {
+                    throw new InvalidOperationException("No results from paginated GET");
+                }
+                result.results.ForEach(x => returnResults.Add(x.id, x));
+            }
+
+            return returnResults;
+        }
+
+        public async Task<List<Content>> GetAllContentForSpace(string spaceKey)
         {
             var url = "/wiki/rest/api/content" +
-                $"?spaceKey={spaceKey}&limit=100&expand=body.storage,version,history";
+                $"?spaceKey={spaceKey}&limit={RETURN_LIMIT}&expand=body.storage,version,history";
 
             return await FetchWithPagination<Content>(url);
         }
 
-        /// <summary>
-        /// Gets all the pages as content from the server, using the given CQL
-        /// query to flter the results that are returned
-        /// </summary>
-        /// <param name="query">https://developer.atlassian.com/cloud/confluence/advanced-searching-using-cql/</param>
-        /// <returns></returns>
-        public async Task<List<Content>> GetPagesByCQL(string query)
+        public async Task<List<Content>> GetContentByCQL(string query)
         {
-            return await GetPagesByCQL(query, null);
+            return await GetContentByCQL(query, null);
         }
 
-        /// <summary>
-        /// Gets all the pages as content from the server, using the given CQL
-        /// query to flter the results that are returned
-        /// </summary>
-        /// <param name="query"></param>
-        /// <param name="pageProgress">Called on every page returned by the api with the curren result count</param>
-        /// <returns></returns>
-        public async Task<List<Content>> GetPagesByCQL(string query, Action<int>? pageProgress)
+        public async Task<List<Content>> GetContentByCQL(string query, Action<int>? pageProgress = null)
         {
             var url = "/wiki/rest/api/content/search" +
-                $"?limit=100&expand=body.storage,version,history&cql={query}";
+                $"?limit={RETURN_LIMIT}&expand=body.storage,version,history&cql={query}";
 
             return await FetchWithPagination<Content>(url, pageProgress);
+        }
+
+        public async Task<IDictionary<string, Page>> GetCurrentPagesInSpace(int spaceId, Action<int>? pageProgress = null)
+        {
+            var url = $"/wiki/api/v2/spaces/{spaceId}/pages" +
+                $"?status=current&limit={RETURN_LIMIT}&serialize-ids-as-strings=true";
+
+            return await FetchWithPaginationV2<Page>(url, pageProgress);
+        }
+
+        public async Task<IEnumerable<InlineComment>> GetInlineCommentsOnPage(string pageId)
+        {
+            var url = $"/wiki/api/v2/pages/{pageId}/inline-comments" +
+                $"?limit={RETURN_LIMIT}&serialize-ids-as-strings=true";
+
+            var results = await FetchWithPaginationV2<InlineComment>(url);
+
+            return results.Values.AsEnumerable();
+        }
+
+        public async Task<IEnumerable<FooterComment>> GetFooterCommentsOnPage(string pageId)
+        {
+            var url = $"/wiki/api/v2/pages/{pageId}/footer-comments" +
+                $"?limit={RETURN_LIMIT}&serialize-ids-as-strings=true";
+
+            var results = await FetchWithPaginationV2<FooterComment>(url);
+
+            return results.Values.AsEnumerable();
+        }
+
+        public async Task<int> GetViewsOfPage(string pageId, DateTime? fromDate = null)
+        {
+            var url = $"/wiki/rest/api/analytics/content/{pageId}/views";
+
+            if (fromDate is not null)
+                url += $"?fromDate={fromDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}";
+
+            var result = await client.GetFromJsonAsync<Views>(url);
+
+            return result?.count ?? throw new InvalidProgramException($"Unable to get views from page {pageId}.");
+        }
+
+        public async Task<int> GetViewersOfPage(string pageId, DateTime? fromDate = null)
+        {
+            var url = $"/wiki/rest/api/analytics/content/{pageId}/viewers";
+
+            if (fromDate is not null)
+                url += $"?fromDate={fromDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}";
+
+            var result = await client.GetFromJsonAsync<Views>(url);
+
+            return result?.count ?? throw new InvalidProgramException($"Unable to get viewers from page {pageId}.");
         }
     }
 }
