@@ -55,9 +55,9 @@ namespace confluence.api
             return returnResults;
         }
 
-        private async Task<IDictionary<int, T>> FetchWithPaginationV2<T>(string url, Action<int>? pageProgress = null) where T : ConfluenceResponse
+        private async Task<IDictionary<string, T>> FetchWithPaginationV2<T>(string url, Action<int>? pageProgress = null) where T : ConfluenceResponse
         {
-            var returnResults = new Dictionary<int, T>();
+            var returnResults = new Dictionary<string, T>();
 
             var result = await client.GetFromJsonAsync<ConfluenceArray<T>>(url);
 
@@ -66,7 +66,7 @@ namespace confluence.api
                 throw new InvalidOperationException("No results from GET");
             }
 
-            result.results.ForEach(x => returnResults.Add(x.Id, x));
+            result.results.ForEach(x => returnResults.Add(x.id, x));
 
             while (!string.IsNullOrEmpty(result._links?.next))
             {
@@ -77,7 +77,7 @@ namespace confluence.api
                 {
                     throw new InvalidOperationException("No results from paginated GET");
                 }
-                result.results.ForEach(x => returnResults.Add(x.Id, x));
+                result.results.ForEach(x => returnResults.Add(x.id, x));
             }
 
             return returnResults;
@@ -104,35 +104,35 @@ namespace confluence.api
             return await FetchWithPagination<Content>(url, pageProgress);
         }
 
-        public async Task<IDictionary<int, Page>> GetCurrentPagesInSpace(int spaceId, Action<int>? pageProgress = null)
+        public async Task<IDictionary<string, Page>> GetCurrentPagesInSpace(int spaceId, Action<int>? pageProgress = null)
         {
             var url = $"/wiki/api/v2/spaces/{spaceId}/pages" +
-                $"?status=current&limit={RETURN_LIMIT}";
+                $"?status=current&limit={RETURN_LIMIT}&serialize-ids-as-strings=true";
 
             return await FetchWithPaginationV2<Page>(url, pageProgress);
         }
 
-        public async Task<IEnumerable<InlineComment>> GetInlineCommentsOnPage(int pageId)
+        public async Task<IEnumerable<InlineComment>> GetInlineCommentsOnPage(string pageId)
         {
             var url = $"/wiki/api/v2/pages/{pageId}/inline-comments" +
-                $"?limit={RETURN_LIMIT}";
+                $"?limit={RETURN_LIMIT}&serialize-ids-as-strings=true";
 
             var results = await FetchWithPaginationV2<InlineComment>(url);
 
             return results.Values.AsEnumerable();
         }
 
-        public async Task<IEnumerable<FooterComment>> GetFooterCommentsOnPage(int pageId)
+        public async Task<IEnumerable<FooterComment>> GetFooterCommentsOnPage(string pageId)
         {
             var url = $"/wiki/api/v2/spaces/{pageId}/footer-comments" +
-                $"?limit={RETURN_LIMIT}";
+                $"?limit={RETURN_LIMIT}&serialize-ids-as-strings=true";
 
             var results = await FetchWithPaginationV2<FooterComment>(url);
 
             return results.Values.AsEnumerable();
         }
 
-        public async Task<int> GetViewsOfPage(int pageId, DateTime? fromDate = null)
+        public async Task<int> GetViewsOfPage(string pageId, DateTime? fromDate = null)
         {
             var url = $"/wiki/rest/api/analytics/content/{pageId}/views";
 
@@ -144,7 +144,7 @@ namespace confluence.api
             return result?.count ?? throw new InvalidProgramException($"Unable to get views from page {pageId}.");
         }
 
-        public async Task<int> GetViewersOfPage(int pageId, DateTime? fromDate = null)
+        public async Task<int> GetViewersOfPage(string pageId, DateTime? fromDate = null)
         {
             var url = $"/wiki/rest/api/analytics/content/{pageId}/viewers";
 

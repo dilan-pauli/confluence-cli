@@ -39,7 +39,7 @@ namespace Confluence.Cli.Commands
 
         public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
         {
-            IDictionary<int, Page> contents = new Dictionary<int, Page>();
+            IDictionary<string, Page> contents = new Dictionary<string, Page>();
             try
             {
                 await console.Status()
@@ -63,7 +63,10 @@ namespace Confluence.Cli.Commands
                         csv.NextRecord();
                         foreach (var content in contents.OrderBy(x => x.Value.createdAt).ToList())
                         {
-                            var output = await ConvertToAnalytic(content.Value, contents[content.Value.parentId].title, settings.fromDate);
+                            var parentTitle = "none";
+                            if (!string.Equals("null", content.Value.parentId))
+                                parentTitle = contents[content.Value.parentId].title;
+                            var output = await ConvertToAnalytic(content.Value, parentTitle, settings.fromDate);
                             csv.WriteRecord(output);
                             csv.NextRecord();
                         }
@@ -84,7 +87,10 @@ namespace Confluence.Cli.Commands
 
                     foreach (var content in contents.OrderBy(x => x.Value.createdAt).ToList())
                     {
-                        var output = await ConvertToAnalytic(content.Value, contents[content.Value.parentId].title, settings.fromDate);
+                        var parentTitle = "none";
+                        if (!string.Equals("null", content.Value.parentId))
+                            parentTitle = contents[content.Value.parentId].title;
+                        var output = await ConvertToAnalytic(content.Value, parentTitle, settings.fromDate);
                         consoleTable.AddRow(output.id.ToString(),
                                                   output.title,
                                                   output.parentTitle,
@@ -108,12 +114,12 @@ namespace Confluence.Cli.Commands
 
         private async Task<PageAnalytic> ConvertToAnalytic(Page content, string parentTitle, DateTime? fromDate = null)
         {
-            var inlineComments = await this.confluenceClient.GetInlineCommentsOnPage(content.Id);
-            var footerComments = await this.confluenceClient.GetFooterCommentsOnPage(content.Id);
-            var views = await this.confluenceClient.GetViewsOfPage(content.Id, fromDate);
-            var viewers = await this.confluenceClient.GetViewersOfPage(content.Id, fromDate);
+            var inlineComments = await this.confluenceClient.GetInlineCommentsOnPage(content.id);
+            var footerComments = await this.confluenceClient.GetFooterCommentsOnPage(content.id);
+            var views = await this.confluenceClient.GetViewsOfPage(content.id, fromDate);
+            var viewers = await this.confluenceClient.GetViewersOfPage(content.id, fromDate);
 
-            var output = new PageAnalytic(content.Id,
+            var output = new PageAnalytic(content.id,
                                   content.title,
                                   parentTitle,
                                   content.createdAt,

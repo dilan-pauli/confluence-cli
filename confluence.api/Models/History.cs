@@ -40,7 +40,7 @@
         public string message { get; set; }
         public int number { get; set; }
         public bool minorEdit { get; set; }
-        public int authorId { get; set; }
+        public string authorId { get; set; }
     }
 
     public class ContentHistory

@@ -8,6 +8,6 @@ namespace Confluence.Api.Models
 {
     public class ConfluenceResponse
     {
-        public int Id { get; set; }
+        public string id { get; set; }
     }
 }

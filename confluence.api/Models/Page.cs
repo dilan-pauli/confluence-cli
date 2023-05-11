@@ -10,9 +10,9 @@ namespace Confluence.Api.Models
     {
         public string status { get; set; }
         public string title { get; set; }
-        public int spaceId { get; set; }
-        public int parentId { get; set; }
-        public int authorId { get; set; }
+        public string spaceId { get; set; }
+        public string parentId { get; set; }
+        public string authorId { get; set; }
         public DateTime createdAt { get; set; }
         public VersionV2 version { get; set; }
         public BodyV2 body { get; set; }
