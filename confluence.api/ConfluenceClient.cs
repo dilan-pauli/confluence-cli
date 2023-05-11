@@ -1,10 +1,13 @@
-﻿using System.Net.Http.Json;
+﻿using System.Globalization;
+using System.Net.Http.Json;
 using Confluence.Api.Models;
 
 namespace confluence.api
 {
     public class ConfluenceHttpClient : IConfluenceClient
     {
+        public static string RETURN_LIMIT = "250";
+
         private HttpClient client;
 
         public ConfluenceHttpClient(HttpClient client)
@@ -19,7 +22,7 @@ namespace confluence.api
         public async Task<List<Space>> GetAllGlobalActiveSpaces()
         {
             var result = await client.GetFromJsonAsync<ConfluenceArray<Space>>("/wiki/rest/api/space" +
-                "?type=global&limit=100&status=current");
+                $"?type=global&limit={RETURN_LIMIT}&status=current");
 
             return result?.results ?? throw new InvalidProgramException("Unable to get spaces from service.");
         }
@@ -37,7 +40,7 @@ namespace confluence.api
 
             returnResults.AddRange(result.results);
 
-            while (!string.IsNullOrEmpty(result._links.next))
+            while (!string.IsNullOrEmpty(result._links?.next))
             {
                 pageProgress?.Invoke(returnResults.Count);
                 result = await client.GetFromJsonAsync<ConfluenceArray<T>>("/wiki" + result._links.next);
@@ -52,10 +55,38 @@ namespace confluence.api
             return returnResults;
         }
 
+        private async Task<IDictionary<int, T>> FetchWithPaginationV2<T>(string url, Action<int>? pageProgress = null) where T : ConfluenceResponse
+        {
+            var returnResults = new Dictionary<int, T>();
+
+            var result = await client.GetFromJsonAsync<ConfluenceArray<T>>(url);
+
+            if (result is null)
+            {
+                throw new InvalidOperationException("No results from GET");
+            }
+
+            result.results.ForEach(x => returnResults.Add(x.Id, x));
+
+            while (!string.IsNullOrEmpty(result._links?.next))
+            {
+                pageProgress?.Invoke(returnResults.Count);
+                result = await client.GetFromJsonAsync<ConfluenceArray<T>>(result._links.next);
+
+                if (result is null)
+                {
+                    throw new InvalidOperationException("No results from paginated GET");
+                }
+                result.results.ForEach(x => returnResults.Add(x.Id, x));
+            }
+
+            return returnResults;
+        }
+
         public async Task<List<Content>> GetAllContentForSpace(string spaceKey)
         {
             var url = "/wiki/rest/api/content" +
-                $"?spaceKey={spaceKey}&limit=100&expand=body.storage,version,history";
+                $"?spaceKey={spaceKey}&limit={RETURN_LIMIT}&expand=body.storage,version,history";
 
             return await FetchWithPagination<Content>(url);
         }
@@ -68,34 +99,61 @@ namespace confluence.api
         public async Task<List<Content>> GetContentByCQL(string query, Action<int>? pageProgress = null)
         {
             var url = "/wiki/rest/api/content/search" +
-                $"?limit=100&expand=body.storage,version,history&cql={query}";
+                $"?limit={RETURN_LIMIT}&expand=body.storage,version,history&cql={query}";
 
             return await FetchWithPagination<Content>(url, pageProgress);
         }
 
-        public Task<IDictionary<int, Page>> GetCurrentPagesInSpace(int spaceId, Action<int>? pageProgress = null)
+        public async Task<IDictionary<int, Page>> GetCurrentPagesInSpace(int spaceId, Action<int>? pageProgress = null)
         {
-            throw new NotImplementedException();
+            var url = $"/wiki/api/v2/spaces/{spaceId}/pages" +
+                $"?status=current&limit={RETURN_LIMIT}";
+
+            return await FetchWithPaginationV2<Page>(url, pageProgress);
         }
 
-        public Task<IEnumerable<InlineComment>> GetInlineCommentsOnPage(int pageId)
+        public async Task<IEnumerable<InlineComment>> GetInlineCommentsOnPage(int pageId)
         {
-            throw new NotImplementedException();
+            var url = $"/wiki/api/v2/pages/{pageId}/inline-comments" +
+                $"?limit={RETURN_LIMIT}";
+
+            var results = await FetchWithPaginationV2<InlineComment>(url);
+
+            return results.Values.AsEnumerable();
         }
 
-        public Task<IEnumerable<FooterComment>> GetFooterCommentsOnPage(int pageId)
+        public async Task<IEnumerable<FooterComment>> GetFooterCommentsOnPage(int pageId)
         {
-            throw new NotImplementedException();
+            var url = $"/wiki/api/v2/spaces/{pageId}/footer-comments" +
+                $"?limit={RETURN_LIMIT}";
+
+            var results = await FetchWithPaginationV2<FooterComment>(url);
+
+            return results.Values.AsEnumerable();
         }
 
-        public Task<int> GetViewsOfPage(int pageId, DateTime? fromDate = null)
+        public async Task<int> GetViewsOfPage(int pageId, DateTime? fromDate = null)
         {
-            throw new NotImplementedException();
+            var url = $"/wiki/rest/api/analytics/content/{pageId}/views";
+
+            if (fromDate is not null)
+                url += $"?fromDate={fromDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}";
+
+            var result = await client.GetFromJsonAsync<Views>(url);
+
+            return result?.count ?? throw new InvalidProgramException($"Unable to get views from page {pageId}.");
         }
 
-        public Task<int> GetViewersOfPage(int pageId, DateTime? fromDate = null)
+        public async Task<int> GetViewersOfPage(int pageId, DateTime? fromDate = null)
         {
-            throw new NotImplementedException();
+            var url = $"/wiki/rest/api/analytics/content/{pageId}/viewers";
+
+            if (fromDate is not null)
+                url += $"?fromDate={fromDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}";
+
+            var result = await client.GetFromJsonAsync<Views>(url);
+
+            return result?.count ?? throw new InvalidProgramException($"Unable to get viewers from page {pageId}.");
         }
     }
 }

@@ -104,12 +104,12 @@ namespace Confluence.Cli.Commands
 
         private async Task<PageAnalytic> ConvertToAnalytic(Page content, string parentTitle)
         {
-            var inlineComments = await this.confluenceClient.GetInlineCommentsOnPage(content.id);
-            var footerComments = await this.confluenceClient.GetFooterCommentsOnPage(content.id);
-            var views = await this.confluenceClient.GetViewsOfPage(content.id);
-            var viewers = await this.confluenceClient.GetViewersOfPage(content.id);
+            var inlineComments = await this.confluenceClient.GetInlineCommentsOnPage(content.Id);
+            var footerComments = await this.confluenceClient.GetFooterCommentsOnPage(content.Id);
+            var views = await this.confluenceClient.GetViewsOfPage(content.Id);
+            var viewers = await this.confluenceClient.GetViewersOfPage(content.Id);
 
-            var output = new PageAnalytic(content.id,
+            var output = new PageAnalytic(content.Id,
                                   content.title,
                                   parentTitle,
                                   content.createdAt,

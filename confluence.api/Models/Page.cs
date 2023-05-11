@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace Confluence.Api.Models
 {
-    public class Page
+    public class Page : ConfluenceResponse
     {
-        public int id { get; set; }
         public string status { get; set; }
         public string title { get; set; }
         public int spaceId { get; set; }

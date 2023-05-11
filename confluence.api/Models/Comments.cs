@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace Confluence.Api.Models
 {
-    public class InlineComment
+    public class InlineComment : ConfluenceResponse
     {
-        public int id { get; set; }
         public string status { get; set; }
         public string title { get; set; }
         public int pageId { get; set; }
