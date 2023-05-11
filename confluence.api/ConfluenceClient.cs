@@ -124,7 +124,7 @@ namespace confluence.api
 
         public async Task<IEnumerable<FooterComment>> GetFooterCommentsOnPage(string pageId)
         {
-            var url = $"/wiki/api/v2/spaces/{pageId}/footer-comments" +
+            var url = $"/wiki/api/v2/pages/{pageId}/footer-comments" +
                 $"?limit={RETURN_LIMIT}&serialize-ids-as-strings=true";
 
             var results = await FetchWithPaginationV2<FooterComment>(url);

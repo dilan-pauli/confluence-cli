@@ -15,6 +15,16 @@ namespace Confluence.Cli
             },
             async (result, timeSpan, retryCount, context) => await Console.Out.WriteLineAsync($"RATE LIMITED: TS: {timeSpan} retryCount: {retryCount}"));
 
+        public static IAsyncPolicy<HttpResponseMessage> RetryAfterError =
+            Policy.HandleResult<HttpResponseMessage>(r => r.StatusCode == System.Net.HttpStatusCode.InternalServerError)
+            .WaitAndRetryForeverAsync<HttpResponseMessage>(sleepDurationProvider: (times, response, ctx) =>
+            {
+                var timeToWait = response.Result.Headers.RetryAfter?.Delta ?? TimeSpan.FromMilliseconds(500);
+                timeToWait =+ new TimeSpan(0, 0, 0, 0, ThreadSafeRandom.Instance.Next(700, 1300));
+                return timeToWait;
+            },
+            async (result, timeSpan, retryCount, context) => await Console.Out.WriteLineAsync($"500 ERROR: TS: {timeSpan} retryCount: {retryCount}"));
+
         private class ThreadSafeRandom
         {
             private static readonly Random _global = new Random();

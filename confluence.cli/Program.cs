@@ -19,7 +19,7 @@ registrations.AddHttpClient<IConfluenceClient, ConfluenceHttpClient>(
             client.BaseAddress = new Uri($"https://{config.BaseUrl}");
             client.SetBasicAuthentication(config.Username, config.APIKey);
         }
-    }).AddPolicyHandler(Polices.RetryHonouringRetryAfter);
+    }).AddPolicyHandler(Polices.RetryHonouringRetryAfter).AddPolicyHandler(Polices.RetryAfterError);
 registrations.AddScoped<IConfluenceConfiguration, EnvConfiguration>();
 var registrar = new TypeRegistrar(registrations);
 

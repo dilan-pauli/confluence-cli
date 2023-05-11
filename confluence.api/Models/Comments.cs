@@ -10,7 +10,7 @@ namespace Confluence.Api.Models
     {
         public string status { get; set; }
         public string title { get; set; }
-        public int pageId { get; set; }
+        public string pageId { get; set; }
         public VersionV2 version { get; set; }
         public BodyV2 body { get; set; }
     }

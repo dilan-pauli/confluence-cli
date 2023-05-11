@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.Concurrent;
+using System.ComponentModel;
 using System.Globalization;
 using confluence.api;
 using Confluence.Api.Models;
@@ -61,15 +62,11 @@ namespace Confluence.Cli.Commands
                     {
                         csv.WriteHeader<PageAnalytic>();
                         csv.NextRecord();
-                        foreach (var content in contents.OrderBy(x => x.Value.createdAt).ToList())
+                        await ReteriveExtraData(contents, (PageAnalytic output) =>
                         {
-                            var parentTitle = "none";
-                            if (!string.Equals("null", content.Value.parentId))
-                                parentTitle = contents[content.Value.parentId].title;
-                            var output = await ConvertToAnalytic(content.Value, parentTitle, settings.fromDate);
                             csv.WriteRecord(output);
                             csv.NextRecord();
-                        }
+                        }, settings.fromDate);
                         console.WriteLine($"Wrote {contents.Count} results to {settings.CSV}");
                     }
                 }
@@ -84,22 +81,17 @@ namespace Confluence.Cli.Commands
                     consoleTable.AddColumn(new TableColumn("Comment Count"));
                     consoleTable.AddColumn(new TableColumn("Users Viewed"));
                     consoleTable.AddColumn(new TableColumn("Views"));
-
-                    foreach (var content in contents.OrderBy(x => x.Value.createdAt).ToList())
+                    await ReteriveExtraData(contents, (PageAnalytic output) =>
                     {
-                        var parentTitle = "none";
-                        if (!string.Equals("null", content.Value.parentId))
-                            parentTitle = contents[content.Value.parentId].title;
-                        var output = await ConvertToAnalytic(content.Value, parentTitle, settings.fromDate);
-                        consoleTable.AddRow(output.id.ToString(),
-                                                  output.title,
-                                                  output.parentTitle,
-                                                  output.created.ToString(),
-                                                  output.lastUpdated.ToString(),
-                                                  output.numberOfComments.ToString(),
-                                                  output.viewers.ToString(),
-                                                  output.views.ToString());
-                    }
+                        consoleTable.AddRow(Markup.Escape(output.id.ToString()),
+                                            Markup.Escape(output.title),
+                                            Markup.Escape(output.parentTitle),
+                                            Markup.Escape(output.created.ToString()),
+                                            Markup.Escape(output.lastUpdated.ToString()),
+                                            Markup.Escape(output.numberOfComments.ToString()),
+                                            Markup.Escape(output.viewers.ToString()),
+                                            Markup.Escape(output.views.ToString()));
+                    }, settings.fromDate);
                     console.Write(consoleTable);
                     console.WriteLine($"Fetched {contents.Count} results...");
                 }
@@ -110,6 +102,43 @@ namespace Confluence.Cli.Commands
             }
 
             return 0;
+        }
+
+        /// <summary>
+        /// Retrieve the extra data associated with the pages for the analytics
+        /// </summary>
+        /// <param name="contents"></param>
+        /// <param name="onPageFetched"> Called in parallel</param>
+        /// <param name="fromDate"></param>
+        /// <returns></returns>
+        private async Task ReteriveExtraData(IDictionary<string, Page> contents, Action<PageAnalytic> onPageFetched, DateTime? fromDate = null)
+        {
+            await console.Status()
+                .AutoRefresh(true)
+                .Spinner(Spinner.Known.Aesthetic)
+                .SpinnerStyle(Style.Parse("green bold"))
+                .StartAsync("Fetching comments and views..", async ctx =>
+                {
+                    var count = 0;
+                    var pages = new ConcurrentQueue<PageAnalytic>();
+                    var orderedContents = contents.Values.OrderBy(x => x.createdAt).ToList();
+                    ParallelOptions parallelOptions = new()
+                    {
+                        MaxDegreeOfParallelism = 32
+                    };
+
+                    await Parallel.ForEachAsync(orderedContents, parallelOptions, async (Page content, CancellationToken token) =>
+                    {
+                        var parentTitle = "none";
+                        if (!string.IsNullOrEmpty(content.parentId))
+                            parentTitle = contents[content.parentId].title;
+                        var output = await ConvertToAnalytic(content, parentTitle, fromDate);
+                        onPageFetched(output);
+                        var currentCount = Interlocked.Increment(ref count);
+                        if (currentCount % 8 == 0)
+                            ctx.Status($"Fetching comments and views {count}/{contents.Count} pages...");
+                    });
+                });
         }
 
         private async Task<PageAnalytic> ConvertToAnalytic(Page content, string parentTitle, DateTime? fromDate = null)
