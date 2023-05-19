@@ -22,6 +22,10 @@
     },
     "Empty": {
       "commandName": "Project"
+    },
+    "analytics all": {
+      "commandName": "Project",
+      "commandLineArgs": "analytics --csv \"C:\\Temp\\\""
     }
   }
 }
