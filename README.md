@@ -46,7 +46,7 @@ This command could take some time to execute if the result list from the query i
 
 Use '-c|--csv' to have the tool output the data formated in a comma separated list. The argument for this option is the path to the file that is to be created.
 
-The columns are the ID of the content, the title of the content, the status of the content, the created data, the last updated date, if the content has more then 100 char's of content to its body, the type of the content, and a link to the content.
+The columns are the ID of the content, the title of the content, the status of the content, the created date, the last updated date, if the content has more then 100 char's of content to its body, the type of the content, and a link to the content.
 
 #### Example Output
 
@@ -54,5 +54,25 @@ The columns are the ID of the content, the title of the content, the status of t
 |-|-|-|-|-|-|-|-|
 | 134389655 | User Testing Intro | current | 2017-02-20 12:26:03  | 2017-02-23 12:26:03 | TRUE | page | https://your_domain.atlassian.net/wiki/spaces/API/pages/134389655
 | 134389878 | Test Material | current | 2017-02-20 12:26:03  | 2017-02-23 12:26:03 | TRUE | page | https://your_domain.atlassian.net/wiki/spaces/API/pages/134389878
+
+...
+
+
+### conflutil analytics
+
+Returns the list of all the pages in the given space with specific header data.
+
+This command could take some time to execute if the result list from the query is large. It will display progress while fetching.
+
+Use '-c|--csv' to have the tool output the data formated in a comma separated list. The argument for this option is the path to the file that is to be created.
+
+The columns are the ID of the page, the title of the page, title of the parent page, the created date, the last updated date, the number of comments on the page, the number of unique views, the total number of views.
+
+#### Example Output
+
+| ID | Title | Parent Title | Created Date | Last Updated | Comment Count | Users Viewed | Views
+|-|-|-|-|-|-|-|-|
+| 134389655 | User Testing Intro |  | 2017-02-20 12:26:03  | 2017-02-23 12:26:03 | 0 | 12 | 1234
+| 134389878 | Test Material | User Testing Intro | 2017-02-20 12:26:03  | 2017-02-23 12:26:03 | 3 | 123 | 333
 
 ...

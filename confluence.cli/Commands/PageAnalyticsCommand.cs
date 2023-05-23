@@ -10,6 +10,7 @@ using Spectre.Console.Cli;
 
 namespace Confluence.Cli.Commands
 {
+    [Description("Returns all the pages in the given space with the following headers: id, title, parentTitle, createdDate, updatedDate, # of comments, viewers, views. This command could take some time to execute if the result list from the query is large. It will display progress while fetching.")]
     public sealed class PageAnalyticsCommand : AsyncCommand<PageAnalyticsCommand.Settings>
     {
         private readonly IAnsiConsole console;
@@ -18,9 +19,9 @@ namespace Confluence.Cli.Commands
 
         public sealed class Settings : CommandSettings
         {
-            [CommandArgument(0, "<SPACEID>")]
+            [CommandArgument(0, "[SpaceId]")]
             [Description("Space ID")]
-            public int SpaceId { get; set; }
+            public uint? SpaceId { get; set; }
 
             [CommandOption("-d|--fromDate")]
             [Description("Date from which the views are retrieved.")]
@@ -40,60 +41,46 @@ namespace Confluence.Cli.Commands
 
         public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
         {
-            IDictionary<string, Page> contents = new Dictionary<string, Page>();
             try
             {
-                await console.Status()
-                    .AutoRefresh(true)
-                    .Spinner(Spinner.Known.Star)
-                    .SpinnerStyle(Style.Parse("green bold"))
-                    .StartAsync("Fetching...", async ctx =>
-                    {
-                        contents = await this.confluenceClient.GetCurrentPagesInSpace(settings.SpaceId, (pages) =>
-                        {
-                            ctx.Status($"Fetching {pages} pages...");
-                        });
-                    });
-
-                if (settings.CSV is not null)
+                if (settings.SpaceId is not null)
                 {
-                    using (var writer = new StreamWriter(settings.CSV))
-                    using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+                    var contents = await GetPagesForSpace(settings.SpaceId.Value);
+
+                    if (settings.CSV is not null)
                     {
-                        csv.WriteHeader<PageAnalytic>();
-                        csv.NextRecord();
-                        await ReteriveExtraData(contents, (PageAnalytic output) =>
-                        {
-                            csv.WriteRecord(output);
-                            csv.NextRecord();
-                        }, settings.fromDate);
-                        console.WriteLine($"Wrote {contents.Count} results to {settings.CSV}");
+                        // If a file name is provided use that, else generate a filename with the space id (or name) and date.
+                        await OutputPageDataToCSV(contents, Path.GetDirectoryName(settings.CSV) ?? settings.CSV, Path.GetFileName(settings.CSV), settings.fromDate);
+                    }
+                    else
+                    {
+                        await OutputPageDataToConsole(contents, settings.fromDate);
                     }
                 }
                 else
                 {
-                    var consoleTable = new Table();
-                    consoleTable.AddColumn(new TableColumn("ID"));
-                    consoleTable.AddColumn(new TableColumn("Title"));
-                    consoleTable.AddColumn(new TableColumn("Parent Title"));
-                    consoleTable.AddColumn(new TableColumn("Created Date"));
-                    consoleTable.AddColumn(new TableColumn("Last Updated"));
-                    consoleTable.AddColumn(new TableColumn("Comment Count"));
-                    consoleTable.AddColumn(new TableColumn("Users Viewed"));
-                    consoleTable.AddColumn(new TableColumn("Views"));
-                    await ReteriveExtraData(contents, (PageAnalytic output) =>
+                    var spaces = await confluenceClient.GetAllGlobalActiveSpaces();
+                    console.WriteLine($"Iterating over {spaces.Count} spaces this could take awhile...");
+
+                    foreach (var space in spaces)
                     {
-                        consoleTable.AddRow(Markup.Escape(output.id.ToString()),
-                                            Markup.Escape(output.title),
-                                            Markup.Escape(output.parentTitle),
-                                            Markup.Escape(output.created.ToString()),
-                                            Markup.Escape(output.lastUpdated.ToString()),
-                                            Markup.Escape(output.numberOfComments.ToString()),
-                                            Markup.Escape(output.viewers.ToString()),
-                                            Markup.Escape(output.views.ToString()));
-                    }, settings.fromDate);
-                    console.Write(consoleTable);
-                    console.WriteLine($"Fetched {contents.Count} results...");
+                        console.WriteLine($"Starting output for {space.name}...");
+
+                        var contents = await GetPagesForSpace(space.id, space.name);
+
+                        if (settings.CSV is not null)
+                        {
+                            if (Directory.Exists(settings.CSV))
+                                throw new Exception("Invalid Path, directory does not exist please provide another.");
+                            var fileName = space.name + DateTime.Now.ToString("s").Replace(":", "") + ".csv";
+                            // If a file name is provided use that, else generate a filename with the space id (or name) and date.
+                            await OutputPageDataToCSV(contents, settings.CSV, fileName, settings.fromDate);
+                        }
+                        else
+                        {
+                            await OutputPageDataToConsole(contents, settings.fromDate);
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -102,6 +89,68 @@ namespace Confluence.Cli.Commands
             }
 
             return 0;
+        }
+
+        private async Task OutputPageDataToCSV(IDictionary<string, Page> contents, string csvFolderPath, string csvFileName, DateTime? viewsFromDate)
+        {
+            var csvPath = Path.Combine(csvFolderPath.Trim('"'), csvFileName).Replace(' ', '_');
+            using (var writer = new StreamWriter(csvPath))
+            using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+            {
+                var results = new ConcurrentQueue<PageAnalytic>();
+                csv.WriteHeader<PageAnalytic>();
+                csv.NextRecord();
+                await ReteriveExtraData(contents, results.Enqueue, viewsFromDate);
+                while (results.TryDequeue(out var output))
+                {
+                    csv.WriteRecord(output);
+                    csv.NextRecord();
+                }
+                console.WriteLine($"Wrote {contents.Count} results to ${Path.GetFullPath(csvPath)}...");
+            }
+        }
+
+        public async Task OutputPageDataToConsole(IDictionary<string, Page> contents, DateTime? viewsFromDate)
+        {
+            var consoleTable = new Table();
+            consoleTable.AddColumn(new TableColumn("ID"));
+            consoleTable.AddColumn(new TableColumn("Title"));
+            consoleTable.AddColumn(new TableColumn("Parent Title"));
+            consoleTable.AddColumn(new TableColumn("Created Date"));
+            consoleTable.AddColumn(new TableColumn("Last Updated"));
+            consoleTable.AddColumn(new TableColumn("Comment Count"));
+            consoleTable.AddColumn(new TableColumn("Users Viewed"));
+            consoleTable.AddColumn(new TableColumn("Views"));
+            await ReteriveExtraData(contents, (PageAnalytic output) =>
+            {
+                consoleTable.AddRow(Markup.Escape(output.id.ToString()),
+                                    Markup.Escape(output.title),
+                                    Markup.Escape(output.parentTitle),
+                                    Markup.Escape(output.created.ToString()),
+                                    Markup.Escape(output.lastUpdated.ToString()),
+                                    Markup.Escape(output.numberOfComments.ToString()),
+                                    Markup.Escape(output.viewers.ToString()),
+                                    Markup.Escape(output.views.ToString()));
+            }, viewsFromDate);
+            console.Write(consoleTable);
+            console.WriteLine($"Fetched {contents.Count} results...");
+        }
+
+        private async Task<IDictionary<string, Page>> GetPagesForSpace(long spaceId, string spaceName = "")
+        {
+            IDictionary<string, Page> contents = new Dictionary<string, Page>();
+            await console.Status()
+                .AutoRefresh(true)
+                .Spinner(Spinner.Known.Star)
+                .SpinnerStyle(Style.Parse("green bold"))
+                .StartAsync("Fetching...", async ctx =>
+                {
+                    contents = await this.confluenceClient.GetCurrentPagesInSpace(spaceId, (pages) =>
+                    {
+                        ctx.Status($"Fetching {pages} pages in space {spaceName}...");
+                    });
+                });
+            return contents;
         }
 
         /// <summary>
@@ -121,7 +170,7 @@ namespace Confluence.Cli.Commands
                 {
                     var count = 0;
                     var pages = new ConcurrentQueue<PageAnalytic>();
-                    var orderedContents = contents.Values.OrderBy(x => x.createdAt).ToList();
+                    var orderedContents = contents.Values.ToList();
                     ParallelOptions parallelOptions = new()
                     {
                         MaxDegreeOfParallelism = 32

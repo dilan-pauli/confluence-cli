@@ -9,6 +9,7 @@ using Spectre.Console.Cli;
 
 namespace Confluence.Cli.Commands
 {
+    [Description("Returns all the page content in the given space with the following headers: id, title, status, createdDate, updatedDate, hasContent, type, weburl. This command could take some time to execute if the result list from the query is large. It will display progress while fetching.")]
     public sealed class ContentCommand : AsyncCommand<ContentCommand.Settings>
     {
         private readonly IAnsiConsole console;
@@ -17,7 +18,7 @@ namespace Confluence.Cli.Commands
 
         public sealed class Settings : CommandSettings
         {
-            [CommandArgument(0, "<CQL>")]
+            [CommandArgument(0, "<cql>")]
             [Description("Confluence Query")]
             public string Query { get; set; }
 
@@ -52,7 +53,7 @@ namespace Confluence.Cli.Commands
 
                 if (settings.CSV is not null)
                 {
-                    using (var writer = new StreamWriter(settings.CSV))
+                    using (var writer = new StreamWriter(Path.GetFullPath(settings.CSV)))
                     using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
                     {
                         csv.WriteHeader<Models.Content>();
